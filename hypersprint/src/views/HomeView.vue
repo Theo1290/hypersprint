@@ -1,9 +1,6 @@
-<script setup>
-import TheWelcome from '../components/TheWelcome.vue'
-</script>
-
 <template>
-  <main>
-    <TheWelcome />
+  <main class="container mt-4">
+    <h1>Home</h1>
+    <p>Welcome to Hyper Sprint!</p>
   </main>
 </template>

@@ -1,35 +1,36 @@
 @import './base.css';
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   font-weight: normal;
 }
 
-a,
-.green {
+/* Y2K Futuristic Maximalist Theme Variables */
+:root {
+  --y2k-cyan: #00ffff;
+  --y2k-magenta: #ff00ff;
+  --y2k-lime: #00ff00;
+  --y2k-blue: #0000ff;
+  --y2k-chrome: #e0e0e0;
+  --y2k-glass: rgba(255, 255, 255, 0.1);
+  --y2k-bg: #050505;
+}
+
+body {
+  background-color: var(--y2k-bg);
+  color: #fff;
+}
+
+/* High contrast links */
+a {
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+  color: var(--y2k-cyan);
+  transition: 0.3s;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+a:hover {
+  color: var(--y2k-magenta);
+  text-shadow: 0 0 8px var(--y2k-magenta);
 }
