@@ -35,9 +35,9 @@ const router = createRouter({
       component: () => import('../views/LeaderboardView.vue'),
     },
     {
-      path: '/results',
-      name: 'results',
-      component: () => import('../views/ResultsView.vue'),
+      path: '/stats',
+      name: 'stats',
+      component: () => import('../views/StatsView.vue'),
     },
     {
       path: '/achievements',

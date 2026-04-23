@@ -1,11 +1,5 @@
 @import './base.css';
-
-#app {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  font-weight: normal;
-}
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 /* Y2K Futuristic Maximalist Theme Variables */
 :root {
@@ -14,23 +8,59 @@
   --y2k-lime: #00ff00;
   --y2k-blue: #0000ff;
   --y2k-chrome: #e0e0e0;
-  --y2k-glass: rgba(255, 255, 255, 0.1);
-  --y2k-bg: #050505;
+  --y2k-glass: rgba(21, 0, 43, 0.85);
+  --y2k-bg: #15002b; /* Dark Purple instead of Black */
+  --y2k-text: #d1b3ff; /* Light Lavender/Purple */
+  --y2k-grid: rgba(0, 255, 255, 0.05);
+}
+
+#app {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
 }
 
 body {
   background-color: var(--y2k-bg);
-  color: #fff;
+  /* Use the provided background image */
+  background-image: url('@/assets/background.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--y2k-text) !important;
+  font-family: 'VT323', monospace; /* Pixel Font */
+  font-size: 1.5rem; /* VT323 is small, so we bump it up */
+  overflow-x: hidden;
 }
 
-/* High contrast links */
+/* Removed Scanline Effect body::before as requested */
+
+h1, h2, h3 {
+  color: var(--y2k-lime);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 3px 3px 0px var(--y2k-blue);
+  font-family: 'VT323', monospace;
+}
+
 a {
   text-decoration: none;
   color: var(--y2k-cyan);
   transition: 0.3s;
+  font-weight: bold;
 }
 
 a:hover {
   color: var(--y2k-magenta);
   text-shadow: 0 0 8px var(--y2k-magenta);
+}
+
+/* Center all content by default */
+.y2k-center-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
