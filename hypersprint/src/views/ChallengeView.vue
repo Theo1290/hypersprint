@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { callApi } from '../utils/api';
 
 // Configuration
@@ -12,18 +12,33 @@ const modes = {
 const selectedMode = ref('words');
 const selectedValue = ref(25);
 const challenge = ref(null);
-const currentWordInput = ref('');
-const currentWordIndex = ref(0);
-const wordResults = ref([]); // Array of { correct: boolean, word: string }
+const userInput = ref('');
 const startTime = ref(null);
 const endTime = ref(null);
 const isFinished = ref(false);
 const results = ref(null);
 const timeLeft = ref(null);
 const timerInterval = ref(null);
+const recentSprints = ref([]);
+
+// Refs for scrolling
+const typingAreaRef = ref(null);
 
 // Derived state
 const wordArray = computed(() => challenge.value ? challenge.value.content_to_type.split(' ') : []);
+const typedWords = computed(() => userInput.value.split(' '));
+const currentWordIndex = computed(() => typedWords.value.length - 1);
+
+// Result for each word
+const completedWordResults = computed(() => {
+  return typedWords.value.slice(0, -1).map((typed, i) => {
+    const target = wordArray.value[i];
+    return {
+      correct: typed === target,
+      word: target
+    };
+  });
+});
 
 // Fetch dynamic challenge
 const fetchChallenge = async () => {
@@ -42,9 +57,7 @@ const fetchChallenge = async () => {
 };
 
 const resetState = () => {
-  currentWordInput.value = '';
-  currentWordIndex.value = 0;
-  wordResults.value = [];
+  userInput.value = '';
   startTime.value = null;
   endTime.value = null;
   isFinished.value = false;
@@ -55,6 +68,18 @@ const resetState = () => {
 
 onMounted(fetchChallenge);
 onUnmounted(() => clearInterval(timerInterval.value));
+
+// Auto-scroll logic
+watch(currentWordIndex, () => {
+  nextTick(() => {
+    if (typingAreaRef.value) {
+      const currentWordEl = typingAreaRef.value.querySelector('.current-word');
+      if (currentWordEl) {
+        currentWordEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  });
+});
 
 // Mode switching
 const setMode = (mode) => {
@@ -87,24 +112,8 @@ const handleInput = (e) => {
   if (isFinished.value) return;
   startTimer();
 
-  const input = currentWordInput.value;
-  
-  // Check for space key to complete a word
-  if (input.endsWith(' ')) {
-    const typedWord = input.trim();
-    const targetWord = wordArray.value[currentWordIndex.value];
-    
-    // Record result
-    wordResults.value.push({
-      correct: typedWord === targetWord,
-      word: targetWord
-    });
-    
-    currentWordIndex.value++;
-    currentWordInput.value = '';
-
-    // Check if we've finished the last word in "words" mode
-    if (selectedMode.value === 'words' && currentWordIndex.value >= wordArray.value.length) {
+  if (selectedMode.value === 'words' && challenge.value) {
+    if (typedWords.value.length > wordArray.value.length || userInput.value === challenge.value.content_to_type) {
       finishChallenge();
     }
   }
@@ -113,18 +122,17 @@ const handleInput = (e) => {
 const finishChallenge = async () => {
   clearInterval(timerInterval.value);
   endTime.value = Date.now();
-  
-  // If in time mode, add the partial current word result if it matches
-  if (selectedMode.value === 'time' && currentWordInput.value.trim().length > 0) {
-    wordResults.value.push({
-      correct: currentWordInput.value.trim() === wordArray.value[currentWordIndex.value],
-      word: wordArray.value[currentWordIndex.value]
-    });
-  }
-
   isFinished.value = true;
+  
   const stats = calculateStats();
   results.value = stats;
+
+  recentSprints.value.unshift({
+    id: Date.now(),
+    mode: selectedMode.value === 'time' ? `${selectedValue.value}s` : `${selectedValue.value} words`,
+    wpm: stats.wpm,
+    accuracy: stats.accuracy
+  });
 
   try {
     await callApi('/api/results.php', 'POST', {
@@ -139,196 +147,212 @@ const finishChallenge = async () => {
   }
 };
 
-// Stats calculation
 const calculateStats = () => {
   const duration = (endTime.value - startTime.value) / 1000;
+  const finalTypedWords = userInput.value.trim().split(' ');
+  const finalResults = finalTypedWords.map((typed, i) => ({
+    correct: typed === wordArray.value[i],
+    word: wordArray.value[i] || ''
+  }));
+
+  const correctWords = finalResults.filter(r => r.correct);
+  const totalCorrectChars = correctWords.reduce((sum, r) => sum + r.word.length + 1, 0);
   
-  // Only count correct words for WPM calculation
-  const correctWords = wordResults.value.filter(r => r.correct);
-  const totalCorrectChars = correctWords.reduce((sum, r) => sum + r.word.length + 1, 0); // +1 for space
-  
-  // Standard WPM = (correct characters / 5) / (seconds / 60)
   const wpm = Math.round((totalCorrectChars / 5) / (duration / 60)) || 0;
-  
-  const accuracy = wordResults.value.length > 0 
-    ? Math.round((correctWords.length / wordResults.value.length) * 100) 
+  const accuracy = finalResults.length > 0 
+    ? Math.round((correctWords.length / finalResults.length) * 100) 
     : 0;
 
   return { wpm, accuracy, timeTaken: Math.round(duration) };
 };
 
-// Word display helper
 const getWordClass = (index) => {
   if (index < currentWordIndex.value) {
-    return wordResults.value[index].correct ? 'text-success' : 'text-danger';
+    const res = completedWordResults.value[index];
+    return res.correct ? 'text-success' : 'text-danger';
   }
-  if (index === currentWordIndex.value) {
-    return 'current-word';
-  }
-  return '';
+  return index === currentWordIndex.value ? 'current-word' : '';
 };
 
-// Check current word characters for live feedback
 const getCharClass = (wordIndex, charIndex) => {
-  if (wordIndex !== currentWordIndex.value) return '';
-  const input = currentWordInput.value;
-  if (charIndex >= input.length) return '';
-  
-  return input[charIndex] === wordArray.value[wordIndex][charIndex] 
-    ? 'text-success' 
-    : 'text-danger-char';
+  const typedWord = typedWords.value[wordIndex];
+  if (!typedWord || charIndex >= typedWord.length) return '';
+  const targetWord = wordArray.value[wordIndex];
+  if (!targetWord) return '';
+  return typedWord[charIndex] === targetWord[charIndex] ? 'text-success' : 'text-danger-char';
 };
-
 </script>
 
 <template>
-  <div class="container mt-5">
-    <!-- Mode Selector -->
-    <div class="d-flex justify-content-center gap-4 mb-4">
-      <div class="btn-group no-round">
-        <button 
-          v-for="mode in ['time', 'words']" 
-          :key="mode"
-          @click="setMode(mode)"
-          :class="['btn', selectedMode === mode ? 'btn-primary' : 'btn-outline-primary']"
-        >
-          {{ mode.toUpperCase() }}
-        </button>
-      </div>
-      
-      <div class="btn-group no-round">
-        <button 
-          v-for="val in modes[selectedMode]" 
-          :key="val"
-          @click="setValue(val)"
-          :class="['btn', selectedValue === val ? 'btn-info' : 'btn-outline-info']"
-        >
-          {{ val }}
-        </button>
+  <div class="row g-4 flex-grow-1 align-items-stretch mb-4">
+    <!-- Recent Sprints Sidebar -->
+    <div class="col-lg-2 d-flex">
+      <div class="y2k-box w-100 d-flex flex-column no-round border-main bg-purple overflow-hidden">
+        <div class="card-header bg-info text-black fw-bold no-round py-3 px-3">
+          <i class="bi bi-clock-history me-2"></i>RECENT
+        </div>
+        <div class="card-body p-0 custom-scrollbar overflow-auto flex-grow-1">
+          <ul class="list-group list-group-flush no-round">
+            <li v-for="sprint in recentSprints" :key="sprint.id" class="list-group-item bg-transparent border-secondary text-light d-flex justify-content-between align-items-center py-3 px-3">
+              <div>
+                <div class="small text-info text-uppercase font-monospace">{{ sprint.mode }}</div>
+                <div class="h4 mb-0 fw-bold">{{ sprint.wpm }} <small class="fs-6 opacity-50">WPM</small></div>
+              </div>
+              <div class="text-end">
+                <div class="small opacity-50 font-monospace">ACC</div>
+                <div class="fw-bold text-success">{{ sprint.accuracy }}%</div>
+              </div>
+            </li>
+            <li v-if="recentSprints.length === 0" class="list-group-item bg-transparent text-center py-5 opacity-50">
+              No sprints recorded
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
-    <div v-if="challenge" class="card p-4 shadow-lg border-primary bg-dark text-light no-round">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-primary m-0">
-          <span v-if="selectedMode === 'time'" class="font-monospace">
-            {{ timeLeft }}s remaining
-          </span>
-          <span v-else>
-            {{ challenge.title }}
-          </span>
-        </h2>
-        <span class="badge bg-secondary text-uppercase no-round">{{ challenge.difficulty }}</span>
-      </div>
-      
-      <div class="typing-area position-relative mb-4 p-3 bg-black border border-secondary font-monospace fs-4 text-white-50 overflow-hidden no-round">
-        <!-- Render words -->
-        <span 
-          v-for="(word, wIndex) in wordArray" 
-          :key="wIndex" 
-          :class="['word-span', getWordClass(wIndex)]"
-        >
-          <span 
-            v-for="(char, cIndex) in word" 
-            :key="cIndex" 
-            :class="getCharClass(wIndex, cIndex)"
-          >{{ char }}</span>
-          <span class="space">&nbsp;</span>
-        </span>
-      </div>
-
-      <input
-        v-model="currentWordInput"
-        @input="handleInput"
-        :disabled="isFinished"
-        type="text"
-        class="form-control form-control-lg mb-3 bg-dark text-white border-secondary font-monospace no-round"
-        placeholder="Type the words here..."
-        autofocus
-      />
-
-      <div v-if="isFinished" class="alert alert-success mt-3 bg-success text-white border-0 no-round">
-        <h4 class="alert-heading fw-bold">Sprint Finished!</h4>
-        <div class="row text-center mt-3">
-          <div class="col">
-            <div class="h3 mb-0 fw-bold">{{ results.wpm }}</div>
-            <small class="opacity-75">WPM</small>
+    <!-- Main Challenge Area -->
+    <div class="col-lg-10 d-flex">
+      <div v-if="challenge" class="y2k-box flex-grow-1 d-flex flex-column p-4 border-main bg-purple no-round">
+        
+        <!-- Aligned Top Bar -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="d-flex align-items-center gap-4">
+            <h2 class="text-primary m-0 font-pixel h1">
+              {{ challenge.title }}
+            </h2>
+            <span v-if="selectedMode === 'time'" class="badge border border-info text-uppercase no-round text-info fs-5 py-2 px-3">
+              {{ timeLeft }}s
+            </span>
           </div>
-          <div class="col border-start border-end border-white border-opacity-25">
-            <div class="h3 mb-0 fw-bold">{{ results.accuracy }}%</div>
-            <small class="opacity-75">Accuracy</small>
-          </div>
-          <div class="col">
-            <div class="h3 mb-0 fw-bold">{{ results.timeTaken }}s</div>
-            <small class="opacity-75">Duration</small>
+
+          <div class="d-flex gap-3">
+            <div class="btn-group no-round border-main-thin">
+              <button v-for="m in ['time', 'words']" :key="m" @click="setMode(m)" :class="['btn btn-std-font no-round', selectedMode === m ? 'btn-primary' : 'btn-outline-primary']">
+                {{ m.toUpperCase() }}
+              </button>
+            </div>
+            <div class="btn-group no-round border-main-thin">
+              <button v-for="v in modes[selectedMode]" :key="v" @click="setValue(v)" :class="['btn btn-std-font no-round', selectedValue === v ? 'btn-info' : 'btn-outline-info']">
+                {{ v }}
+              </button>
+            </div>
           </div>
         </div>
-        <button @click="fetchChallenge" class="btn btn-light w-100 mt-4 fw-bold no-round">Restart Challenge</button>
-      </div>
-    </div>
-    
-    <div v-else class="text-center mt-5">
-      <div class="spinner-border text-primary no-round" role="status">
-        <span class="visually-hidden">Loading...</span>
+        
+        <!-- Typing Area -->
+        <div ref="typingAreaRef" class="typing-area position-relative mb-4 p-3 bg-black border border-secondary font-monospace fs-4 text-white-50 no-round custom-scrollbar overflow-auto">
+          <span v-for="(word, wIdx) in wordArray" :key="wIdx" :class="['word-span', getWordClass(wIdx)]">
+            <span v-for="(char, cIdx) in word" :key="cIdx" :class="getCharClass(wIdx, cIdx)">{{ char }}</span>
+            <span class="space">&nbsp;</span>
+          </span>
+        </div>
+
+        <!-- Input Box -->
+        <textarea
+          v-model="userInput"
+          @input="handleInput"
+          :disabled="isFinished"
+          class="form-control form-control-lg mb-3 bg-grey text-white border-secondary font-monospace no-round custom-scrollbar"
+          placeholder="Start typing..."
+          rows="3"
+          autofocus
+        ></textarea>
+
+        <!-- Persistent Restart Button -->
+        <div class="text-center mt-2 mb-3">
+          <button @click="fetchChallenge" class="btn btn-outline-light border-0 p-0 restart-btn" title="Restart Challenge">
+            <i class="bi bi-arrow-clockwise fs-1"></i>
+          </button>
+        </div>
+
+        <!-- Completion Stats -->
+        <div v-if="isFinished" class="alert alert-success mt-auto bg-success text-white border-0 no-round shadow-sm">
+          <h4 class="alert-heading fw-bold">Sprint Finished!</h4>
+          <div class="row text-center mt-3">
+            <div class="col">
+              <div class="h3 mb-0 fw-bold">{{ results.wpm }}</div>
+              <small class="opacity-75">WPM</small>
+            </div>
+            <div class="col border-start border-end border-white border-opacity-25">
+              <div class="h3 mb-0 fw-bold">{{ results.accuracy }}%</div>
+              <small class="opacity-75">ACC</small>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.no-round {
-  border-radius: 0 !important;
+.no-round { border-radius: 0 !important; }
+
+.bg-purple { background-color: var(--y2k-bg) !important; }
+.bg-black { background-color: #000 !important; }
+.bg-grey { background-color: #2a2a2a !important; }
+
+/* Main consistent border color */
+.border-main { border: 3px solid rgba(255, 255, 255, 0.2) !important; }
+.border-main-thin { border: 1px solid rgba(255, 255, 255, 0.2) !important; }
+
+.y2k-box {
+  min-height: 100%;
+  background: var(--y2k-bg);
 }
 
-.typing-area {
-  min-height: 120px;
-  max-height: 200px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-all;
-  user-select: none;
+.font-pixel {
+  font-family: 'VT323', monospace !important;
+  font-size: 2.5rem !important;
 }
 
-.word-span {
-  display: inline-block;
+.typing-area { 
+  height: 120px; 
+  line-height: 1.6; 
+  white-space: pre-wrap; 
+  word-break: break-all; 
+  scroll-behavior: smooth;
 }
 
-.current-word {
-  background-color: rgba(13, 110, 253, 0.2);
-  border-bottom: 2px solid #0d6efd;
+textarea { 
+  height: 120px; 
+  resize: none; 
 }
 
-.text-success {
-  color: #00ff88 !important;
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
 }
 
-.text-danger {
-  color: #ff3366 !important;
-  text-decoration: line-through;
+.word-span { display: inline-block; padding: 0 2px; }
+.current-word { background: rgba(13, 110, 253, 0.25); border-bottom: 2px solid #0d6efd; }
+.text-success { color: #00ff88 !important; }
+.text-danger { color: #ff3366 !important; text-decoration: line-through; }
+.text-danger-char { color: #ff3366 !important; background: rgba(255, 51, 102, 0.2); }
+
+textarea:focus { border-color: #0d6efd; outline: none; }
+
+.list-group-item { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
+.list-group-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+.btn-std-font {
+  font-family: sans-serif !important;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
 
-.text-danger-char {
-  color: #ff3366 !important;
-  background-color: rgba(255, 51, 102, 0.2);
+.restart-btn {
+  transition: transform 0.2s ease-in-out;
+  color: rgba(255, 255, 255, 0.6);
 }
 
-input {
-  transition: all 0.2s ease;
+.restart-btn:hover {
+  transform: rotate(90deg);
+  color: white;
+  background: transparent !important;
 }
 
-input:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 15px rgba(13, 110, 253, 0.3);
-  outline: none;
-}
-
-.card {
-  border-width: 2px;
-  background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-}
-
-.btn-group .btn {
-  border-width: 2px;
-  font-weight: bold;
-}
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #000; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border: 1px solid #555; }
 </style>

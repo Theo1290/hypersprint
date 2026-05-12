@@ -28,6 +28,7 @@ const router = createRouter({
       path: '/challenge',
       name: 'challenge',
       component: () => import('../views/ChallengeView.vue'),
+      meta: { customLayout: true }
     },
     {
       path: '/leaderboard',

@@ -1,10 +1,11 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
+const route = useRoute();
 </script>
 
 <template>
   <div class="app-container py-4">
-    <header class="container mb-4">
+    <header class="y2k-container mb-4">
       <nav class="navbar navbar-expand-lg navbar-dark y2k-nav px-4">
         <div class="container-fluid px-0">
           <RouterLink class="navbar-brand y2k-logo" to="/">HYPER SPRINT</RouterLink>
@@ -55,13 +56,16 @@ import { RouterLink, RouterView } from 'vue-router'
       </nav>
     </header>
 
-    <main class="container mb-4">
-      <div class="y2k-page-wrapper y2k-center-content">
+    <main class="y2k-container flex-grow-1 d-flex flex-column mb-4">
+      <!-- Default Wrapper Logic -->
+      <div v-if="!route.meta.customLayout" class="y2k-page-wrapper d-flex flex-column flex-grow-1">
         <RouterView />
       </div>
+      <!-- Override for custom layouts (like Challenge) -->
+      <RouterView v-else class="flex-grow-1" />
     </main>
 
-    <footer class="container mt-auto">
+    <footer class="y2k-container mt-auto">
       <div class="y2k-footer text-center py-4">
         <p class="mb-0 y2k-footer-text">
           <span class="glow-text-magenta">&copy; 2026 HYPER SPRINT</span> 
@@ -82,16 +86,30 @@ import { RouterLink, RouterView } from 'vue-router'
   min-height: 100vh;
 }
 
+.y2k-container {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+@media (min-width: 1200px) {
+  .y2k-container {
+    max-width: 85vw;
+  }
+}
+
 .y2k-nav {
-  background: var(--y2k-bg); /* Solid Dark Purple */
-  border: 3px solid var(--y2k-cyan);
-  box-shadow: 0 0 20px var(--y2k-cyan);
+  background: var(--y2k-bg);
+  border: 3px solid rgba(255, 255, 255, 0.2);
   z-index: 1000;
   border-radius: 0 !important;
 }
 
 .y2k-logo {
   font-weight: 900;
+  font-size: 2.2rem !important; /* Increased Size */
   color: var(--y2k-cyan) !important;
   letter-spacing: 3px;
   text-shadow: 3px 3px 0px var(--y2k-magenta);
@@ -101,7 +119,7 @@ import { RouterLink, RouterView } from 'vue-router'
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
-  font-size: 1.2rem;
+  font-size: 1.4rem !important; /* Increased Size */
 }
 
 .nav-link:hover {
@@ -110,14 +128,13 @@ import { RouterLink, RouterView } from 'vue-router'
 }
 
 .y2k-user-icon {
-  font-size: 1.6rem;
+  font-size: 2rem !important;
   vertical-align: middle;
 }
 
 .y2k-dropdown {
   background: var(--y2k-bg);
-  border: 2px solid var(--y2k-cyan);
-  box-shadow: 0 0 15px var(--y2k-cyan);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 0 !important;
 }
 
@@ -132,7 +149,7 @@ import { RouterLink, RouterView } from 'vue-router'
 }
 
 .y2k-page-wrapper {
-  background: var(--y2k-bg); /* Solid Dark Purple */
+  background: var(--y2k-bg);
   width: 100%;
   min-height: 60vh;
   padding: 3rem;
@@ -141,9 +158,8 @@ import { RouterLink, RouterView } from 'vue-router'
 }
 
 .y2k-footer {
-  background: var(--y2k-bg); /* Solid Dark Purple */
-  border: 3px solid var(--y2k-magenta);
-  box-shadow: 0 0 20px var(--y2k-magenta);
+  background: var(--y2k-bg);
+  border: 3px solid rgba(255, 255, 255, 0.2);
   z-index: 1000;
   position: relative;
   border-radius: 0 !important;
@@ -152,7 +168,7 @@ import { RouterLink, RouterView } from 'vue-router'
 .y2k-footer-text {
   font-weight: bold;
   letter-spacing: 2px;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .glow-text-magenta {
