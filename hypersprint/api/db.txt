@@ -1,0 +1,93 @@
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  uuid VARCHAR(36) UNIQUE NOT NULL,
+  username VARCHAR(255) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  profile_url VARCHAR(500),
+  join_date DATETIME,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME,
+  INDEX(username),
+  INDEX(email)
+);
+
+CREATE TABLE challenges (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  uuid VARCHAR(36) UNIQUE NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  difficulty VARCHAR(50),
+  type VARCHAR(100),
+  category VARCHAR(100),
+  points INT DEFAULT 0,
+  duration_seconds INT,
+  created_by_user_id INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME,
+  FOREIGN KEY (created_by_user_id) REFERENCES users(id),
+  INDEX(difficulty),
+  INDEX(category)
+);
+
+CREATE TABLE results (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  challenge_id INT NOT NULL,
+  result_data LONGTEXT,
+  score INT,
+  completed_at DATETIME,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (challenge_id) REFERENCES challenges(id),
+  INDEX(user_id),
+  INDEX(challenge_id)
+);
+
+CREATE TABLE friends (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  friend_user_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (friend_user_id) REFERENCES users(id),
+  UNIQUE KEY(user_id, friend_user_id),
+  INDEX(user_id)
+);
+
+CREATE TABLE feed_posts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  post_text TEXT,
+  media_url VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  INDEX(user_id),
+  INDEX(created_at)
+);
+
+CREATE TABLE achievements (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  uuid VARCHAR(36) UNIQUE NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  icon_url VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME
+);
+
+CREATE TABLE user_achievements (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  achievement_id INT NOT NULL,
+  unlocked_at DATETIME,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (achievement_id) REFERENCES achievements(id),
+  UNIQUE KEY(user_id, achievement_id),
+  INDEX(user_id)
+);
