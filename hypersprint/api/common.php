@@ -1,7 +1,6 @@
 <?php
 // Helper methods
-
-function send_json($data, int $status_code = 200): void
+function send_json($data, $status_code = 200)
 {
     header('Content-Type: application/json');
     http_response_code($status_code);
@@ -9,24 +8,26 @@ function send_json($data, int $status_code = 200): void
     exit;
 }
 
-function get_json_body(): array
+function get_json_body()
 {
     $body = file_get_contents('php://input');
     $data = json_decode($body, true);
+
     if ($body !== '' && $data === null) {
         send_json(['error' => 'Invalid JSON request body'], 400);
     }
+
     return is_array($data) ? $data : [];
 }
 
-function require_method(string $method): void
+function require_method($method)
 {
     if ($_SERVER['REQUEST_METHOD'] !== $method) {
         send_json(['error' => 'Method not allowed'], 405);
     }
 }
 
-function require_auth(): int
+function require_auth()
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
@@ -39,15 +40,16 @@ function require_auth(): int
     return (int) $_SESSION['user_id'];
 }
 
-function generate_uuid(): string
+function generate_uuid()
 {
     $data = random_bytes(16);
     $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
     $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
 
-function sanitize_string($value): string
+function sanitize_string($value)
 {
     return trim((string) $value);
 }
