@@ -10,17 +10,24 @@ const usernameSpeedTextbox = ref(null);
 const passwordSpeedTextbox = ref(null);
 
 // Stores final submitted typing results
-const usernameResults = ref(null);
-const passwordResults = ref(null);
+const data = ref({
+  username: '',
+  password: ''
+})
 
 // Retrieve data from SpeedTextbox and process it
 const handleLogin = () => {
   if(!usernameSpeedTextbox.value || !passwordSpeedTextbox.value) return;
 
-  usernameResults.value = usernameSpeedTextbox.value.submit();
-  passwordResults.value = passwordSpeedTextbox.value.submit();
-  console.log('Username Results:', usernameResults.value);
-  console.log('Password Results:', usernameResults.value);
+  var dataUsername = usernameSpeedTextbox.value.submit();
+  var dataPassword = passwordSpeedTextbox.value.submit();
+
+  data.value.username = dataUsername.text;
+  data.value.password = dataPassword.text;
+
+  // Testing logs
+  //console.log('Username:', dataUsername.characters, 'chars in', dataUsername.duration, 'secs =', dataUsername.cpm, 'CPM');
+  //console.log('Password:', dataPassword.characters, 'chars in', dataPassword.duration, 'secs =', dataPassword.cpm, 'CPM');
 };
 </script>
 
@@ -34,11 +41,31 @@ const handleLogin = () => {
     </div>
     <div v-else>
       <p>How fast can you login?</p>
-      <SpeedTextbox ref="usernameSpeedTextbox" placeholder="Enter your username..." />
-      <SpeedTextbox ref="passwordSpeedTextbox" placeholder="Enter your password..." />
-      
-      <button class="btn btn-primary mt-3" @click="handleLogin">Submit</button>
+      <form style="margin-left: 1.2em;">
+        <div>
+        <!-- Username input (uses SpeedTextbox component) -->
+        <label for="username" class="y2k-note">Username</label>
+        <SpeedTextbox ref="usernameSpeedTextbox"
+          id="username" name="username" type="text"
+          placeholder="Enter username..."
+          autocomplete="username" required
+        />
 
+        <!-- Password input (uses SpeedTextbox component) -->
+        <label for="password" class="y2k-note">Password</label>
+        <SpeedTextbox ref="passwordSpeedTextbox"
+          id="password" name="password" type="password"
+          placeholder="Enter password..."
+          autocomplete="current-password" required
+        />
+        
+        <!-- Submission button -->
+        <button type="submit" class="btn y2k-btn btn-primary mt-3" @click="handleLogin">Submit</button>
+        </div>
+
+      </form>
+
+      <!-- Output testing display
       <div v-if="usernameResults" class="alert alert-success mt-3">
         <div><strong>CPM:</strong> {{ usernameResults.cpm }}</div>
         <div><strong>Duration:</strong> {{ usernameResults.duration }}s</div>
@@ -51,6 +78,7 @@ const handleLogin = () => {
         <div><strong>Characters:</strong> {{ passwordResults.characters }}</div>
         <div><strong>Input:</strong> {{ passwordResults.text }}</div>
       </div>
+      -->
     </div>
   </div>
 </template>
@@ -58,6 +86,8 @@ const handleLogin = () => {
 <style scoped>
 .y2k-btn { border-radius: 0; border-width: 2px; font-weight: bold; }
 .y2k-btn:hover { background: rgba(255,255,255,0.1); }
+.y2k-btn.btn-primary { width: 80%; }
 .y2k-card { background: var(--y2k-glass); border: 2px solid var(--y2k-cyan); }
 .y2k-stat { background: var(--y2k-glass); border: 1px solid var(--y2k-magenta); padding: 1rem 2rem; }
+.y2k-note { background: var(--y2k-glass); line-height: 1.5rem; font-size: medium; }
 </style>

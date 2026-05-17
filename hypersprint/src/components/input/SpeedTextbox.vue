@@ -8,11 +8,23 @@ import { ref, computed } from 'vue';
  * Props accepted by this component and local storage variables.
  * 
  */
-defineProps({
+const props = defineProps({
+  id: { type: String, default: null },
+  name: { type: String, default: null },
+  type: { type: String, default: 'text' },
   placeholder: { type: String, default: 'Enter your text...' }
 });
 
-// Stores the textarea content
+// Stores the input ID
+const inputId = computed(() => { return props.id; });
+
+// Stores the input name
+const inputName = computed(() => { return props.name; });
+
+// Stores the input type
+const inputType = ref(props.type);
+
+// Stores the input content
 const userInput = ref('');
 
 // Timestamp when the current typing session began
@@ -23,6 +35,9 @@ const accumulatedTime = ref(0);
 
 // Tracks whether the textbox is currently focused and active
 const isActive = ref(false);
+
+// Tracks visibility of sanitized text state (for password show/hide)
+const isVisible = ref(false);
 
 /*
  * Reset component state
@@ -92,7 +107,7 @@ const handleInput = () => {
 };
 
 /*
- * Handle textarea focus
+ * Handle input focus
  * -------------------------------------------------------------------------
  * 
  * Resumes timing when focus returns after a pause.
@@ -101,13 +116,30 @@ const handleInput = () => {
 const handleFocus = () => { resumeSession(); };
 
 /*
- * Handle textarea blur
+ * Handle input blur
  * -------------------------------------------------------------------------
  * 
  * Pauses active timing when focus is lost.
  * 
  */
 const handleBlur = () => { pauseSession(); };
+
+/*
+ * Toggle text visibility
+ * -------------------------------------------------------------------------
+ * 
+ * Dynamically switch between 'password' and 'text' types.
+ * 
+ */
+const toggleVisibility = () => {
+  if(inputType.value === 'text') {
+    inputType.value = 'password';
+    isVisible.value = false;
+  } else if(inputType.value === 'password') {
+    inputType.value = 'text';
+    isVisible.value = true;
+  }
+};
 
 /*
  * Computed active duration
@@ -193,6 +225,12 @@ const submit = () => {
   };
 };
 
+// Component modifications
+defineOptions({
+  inheritAttrs: false
+})
+
+// Component public access
 defineExpose({
   submit,
   reset
@@ -201,39 +239,78 @@ defineExpose({
 
 <template>
   <div class="speed-textbox">
-    <textarea
+    <input
       v-model="userInput"
+      v-bind="$attrs"
+      :id="inputId"
+      :name = "inputName"
+      :type="inputType"
       :placeholder="placeholder"
       @input="handleInput"
       @focus="handleFocus"
       @blur="handleBlur"
-      class="form-control form-control-lg md-2 bg-grey text-white border-secondary font-monospace no-round"
-      rows="1"
+      class="speed-input form-control form-control-lg md-2 bg-grey border-secondary font-monospace text-white"
+      autocapitalize="none"
+      autocorrect="off"
       autofocus
+      rows="1"
     />
 
+    <!-- Toggle Button (Only shows if the prop type is 'password') -->
+    <button 
+      v-if="type === 'password' && totalCharacters > 0"
+      type="button"
+      @click="toggleVisibility"
+      class="btn btn-visible"
+    >
+      {{ isVisible ? 'Hide' : 'Show' }}
+    </button>
+
     <!-- Live CPM label -->
-    <div class="small label">
+    <div class="label">
       {{ cpm }} cpm
     </div>
   </div>
 </template>
 
 <style scoped>
+:root {
+  --color-black: #0c1017;
+  --color-grey: #ffffff66;
+  --color-blue: #0d6efd;
+}
+
 .no-round { border-radius: 0 !important; }
-.bg-black { background-color: #000 !important; }
 .bg-grey { background-color: #2a2a2a !important; }
 
-textarea { 
-  height: 45px; 
-  resize: none; 
+.speed-textbox {
+  display: inline-flex;
+  gap: 0.5em;
+  width: 100%;
+  height: 2em;
+  margin-bottom: 1em;
 }
-textarea::placeholder { color: rgba(255, 255, 255, 0.4) !important; }
-textarea:focus { border-color: #0d6efd; outline: none; }
+
+.speed-input {
+  width: 80%;
+  height: 100%;
+  resize: none;
+}
+.speed-input::placeholder { color: #ffffff66 !important; }
+.speed-input:focus { border-color: var(--color-blue); outline: none; }
+
+.btn-visible {
+  position: inline-block;
+  transform: translateX(-3.8em);
+  height: 100%;
+  color: var(--color-blue);
+  text-align: center;
+  margin-right: -3.8em;
+}
 
 .label {
-  text-align: right;
-  margin-right: 1em;
-  margin-bottom: 1em;
+  position: inline-block;
+  align-self: center;
+  text-wrap: nowrap;
 }
 </style>
