@@ -81,6 +81,27 @@ function handleMockRequest(path, method, body) {
             { result_id: 'r2', challenge_title: '50 Words', wpm: 71.2, accuracy: 95.5, duration: 42, completed: '2026-05-13T14:30:00Z' }
           ]
         });
+      } else if (route === '/api/friends.php' && method !== 'POST') {
+        if (params.get('search')) {
+          resolve({
+            success: true,
+            results: [
+              { user_id: 'mock-uuid-002', username: 'speedtyper99', profile_url: null, level: 6.1, is_friend: false, request_sent: false },
+              { user_id: 'mock-uuid-003', username: 'haulidaie', profile_url: null, level: 5.3, is_friend: true, request_sent: false }
+            ]
+          });
+        } else {
+          resolve({
+            success: true,
+            friends: [
+              { user_id: 'mock-uuid-003', username: 'haulidaie', profile_url: null, level: 5.3, highest_wpm: 101.2 }
+            ],
+            friend_requests: [
+              { from_user_id: 'mock-uuid-004', username: 'jeremy_allan', profile_url: null, requested_at: '2026-05-15T08:00:00Z' }
+            ],
+            sent_requests: []
+          });
+        }
       } else {
         resolve({ success: true });
       }
