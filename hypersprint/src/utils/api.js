@@ -68,6 +68,40 @@ function handleMockRequest(path, method, body) {
         });
       } else if (route === '/api/results.php') {
         resolve({ success: true, result_id: 'mock-uuid-' + Date.now() });
+      } else if (route === '/api/profile.php' && method !== 'POST') {
+        resolve({
+          success: true,
+          user: {
+            username: 'nedtonks', email: 'ned@example.com', profile_url: null,
+            joined: '2026-01-15T10:00:00Z', level: 4.2,
+            highest_wpm: 87.5, average_wpm: 72.3, average_accuracy: 96.1, challenge_count: 34
+          },
+          recent_results: [
+            { result_id: 'r1', challenge_title: '25 Words', wpm: 87.5, accuracy: 98.0, duration: 18, completed: '2026-05-14T09:00:00Z' },
+            { result_id: 'r2', challenge_title: '50 Words', wpm: 71.2, accuracy: 95.5, duration: 42, completed: '2026-05-13T14:30:00Z' }
+          ]
+        });
+      } else if (route === '/api/friends.php' && method !== 'POST') {
+        if (params.get('search')) {
+          resolve({
+            success: true,
+            results: [
+              { user_id: 'mock-uuid-002', username: 'speedtyper99', profile_url: null, level: 6.1, is_friend: false, request_sent: false },
+              { user_id: 'mock-uuid-003', username: 'haulidaie', profile_url: null, level: 5.3, is_friend: true, request_sent: false }
+            ]
+          });
+        } else {
+          resolve({
+            success: true,
+            friends: [
+              { user_id: 'mock-uuid-003', username: 'haulidaie', profile_url: null, level: 5.3, highest_wpm: 101.2 }
+            ],
+            friend_requests: [
+              { from_user_id: 'mock-uuid-004', username: 'jeremy_allan', profile_url: null, requested_at: '2026-05-15T08:00:00Z' }
+            ],
+            sent_requests: []
+          });
+        }
       } else {
         resolve({ success: true });
       }
