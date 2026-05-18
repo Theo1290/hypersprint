@@ -1,84 +1,100 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { callApi } from '@/utils/api'
 import SpeedTextbox from '@/components/input/SpeedTextbox.vue'
 
-// Boolean state for non-sensitive interfacing
-const is_authenticated = ref(false);
+const router = useRouter()
+
+// UI state
+const is_authenticated = ref(false)
+const loading = ref(false)
+const error = ref('')
 
 // Reference to the child SpeedTextbox component
-const usernameSpeedTextbox = ref(null);
-const passwordSpeedTextbox = ref(null);
-
-// Stores final submitted typing results
-const data = ref({
-  username: '',
-  password: ''
-})
+const usernameSpeedTextbox = ref(null)
+const passwordSpeedTextbox = ref(null)
 
 // Retrieve data from SpeedTextbox and process it
-const handleLogin = () => {
-  if(!usernameSpeedTextbox.value || !passwordSpeedTextbox.value) return;
+const handleLogin = async (e) => {
+  e.preventDefault()
+  if (!usernameSpeedTextbox.value || !passwordSpeedTextbox.value) return
 
-  var dataUsername = usernameSpeedTextbox.value.submit();
-  var dataPassword = passwordSpeedTextbox.value.submit();
+  error.value = ''
+  loading.value = true
 
-  data.value.username = dataUsername.text;
-  data.value.password = dataPassword.text;
+  const dataUsername = usernameSpeedTextbox.value.submit()
+  const dataPassword = passwordSpeedTextbox.value.submit()
 
-  // Testing logs
-  //console.log('Username:', dataUsername.characters, 'chars in', dataUsername.duration, 'secs =', dataUsername.cpm, 'CPM');
-  //console.log('Password:', dataPassword.characters, 'chars in', dataPassword.duration, 'secs =', dataPassword.cpm, 'CPM');
-};
+  try {
+    const res = await callApi('/api/login.php', 'POST', {
+      username: dataUsername.text,
+      password: dataPassword.text
+    })
+
+    if (res.success) {
+      is_authenticated.value = true
+      // Optional: Redirect to profile after a short delay
+      setTimeout(() => {
+        router.push('/profile')
+      }, 1500)
+    }
+  } catch (err) {
+    error.value = err.message || 'Login failed. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
   <div class="container text-start mt-4 text-start">
     <h1>LOGIN</h1>
+    
     <div v-if="is_authenticated">
-      <p class="mb-4">You have already logged in!</p>
+      <div class="alert alert-success bg-success text-white border-0 no-round mb-4">
+        <h4 class="alert-heading fw-bold mb-0">SUCCESSFULLY LOGGED IN!</h4>
+        <p class="mb-0">Redirecting to system profile...</p>
+      </div>
       <RouterLink to="/profile" class="btn y2k-btn me-3" style="color:#0ff;border-color:#0ff">PROFILE</RouterLink>
       <RouterLink to="/logout" class="btn y2k-btn" style="color:#f0f;border-color:#f0f">LOGOUT</RouterLink>
     </div>
+
     <div v-else>
       <p>How fast can you login?</p>
-      <form style="margin-left: 1.2em;">
+
+      <div v-if="error" class="alert alert-danger bg-danger text-white border-0 no-round mb-4">
+        {{ error }}
+      </div>
+
+      <form @submit="handleLogin" style="margin-left: 1.2em;">
         <div>
-        <!-- Username input (uses SpeedTextbox component) -->
-        <label for="username" class="y2k-note">Username</label>
-        <SpeedTextbox ref="usernameSpeedTextbox"
-          id="username" name="username" type="text"
-          placeholder="Enter username..."
-          autocomplete="username" required
-        />
+          <!-- Username input (uses SpeedTextbox component) -->
+          <label for="username" class="y2k-note">Username</label>
+          <SpeedTextbox ref="usernameSpeedTextbox"
+            id="username" name="username" type="text"
+            placeholder="Enter username..."
+            autocomplete="username" required
+          />
 
-        <!-- Password input (uses SpeedTextbox component) -->
-        <label for="password" class="y2k-note">Password</label>
-        <SpeedTextbox ref="passwordSpeedTextbox"
-          id="password" name="password" type="password"
-          placeholder="Enter password..."
-          autocomplete="current-password" required
-        />
-        
-        <!-- Submission button -->
-        <button type="submit" class="btn y2k-btn btn-primary mt-3" @click="handleLogin">Submit</button>
+          <!-- Password input (uses SpeedTextbox component) -->
+          <label for="password" class="y2k-note">Password</label>
+          <SpeedTextbox ref="passwordSpeedTextbox"
+            id="password" name="password" type="password"
+            placeholder="Enter password..."
+            autocomplete="current-password" required
+          />
+          
+          <!-- Submission button -->
+          <button 
+            type="submit" 
+            class="btn y2k-btn btn-primary mt-3" 
+            :disabled="loading"
+          >
+            {{ loading ? 'AUTHENTICATING...' : 'SUBMIT' }}
+          </button>
         </div>
-
       </form>
-
-      <!-- Output testing display
-      <div v-if="usernameResults" class="alert alert-success mt-3">
-        <div><strong>CPM:</strong> {{ usernameResults.cpm }}</div>
-        <div><strong>Duration:</strong> {{ usernameResults.duration }}s</div>
-        <div><strong>Characters:</strong> {{ usernameResults.characters }}</div>
-        <div><strong>Input:</strong> {{ usernameResults.text }}</div>
-      </div>
-      <div v-if="passwordResults" class="alert alert-success mt-3">
-        <div><strong>CPM:</strong> {{ passwordResults.cpm }}</div>
-        <div><strong>Duration:</strong> {{ passwordResults.duration }}s</div>
-        <div><strong>Characters:</strong> {{ passwordResults.characters }}</div>
-        <div><strong>Input:</strong> {{ passwordResults.text }}</div>
-      </div>
-      -->
     </div>
   </div>
 </template>
