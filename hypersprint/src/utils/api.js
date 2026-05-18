@@ -68,6 +68,19 @@ function handleMockRequest(path, method, body) {
         });
       } else if (route === '/api/results.php') {
         resolve({ success: true, result_id: 'mock-uuid-' + Date.now() });
+      } else if (route === '/api/profile.php' && method !== 'POST') {
+        resolve({
+          success: true,
+          user: {
+            username: 'nedtonks', email: 'ned@example.com', profile_url: null,
+            joined: '2026-01-15T10:00:00Z', level: 4.2,
+            highest_wpm: 87.5, average_wpm: 72.3, average_accuracy: 96.1, challenge_count: 34
+          },
+          recent_results: [
+            { result_id: 'r1', challenge_title: '25 Words', wpm: 87.5, accuracy: 98.0, duration: 18, completed: '2026-05-14T09:00:00Z' },
+            { result_id: 'r2', challenge_title: '50 Words', wpm: 71.2, accuracy: 95.5, duration: 42, completed: '2026-05-13T14:30:00Z' }
+          ]
+        });
       } else {
         resolve({ success: true });
       }
