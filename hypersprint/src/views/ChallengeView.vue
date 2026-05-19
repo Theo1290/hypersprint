@@ -20,14 +20,17 @@ const results = ref(null);
 const timeLeft = ref(null);
 const timerInterval = ref(null);
 const recentSprints = ref([]);
+const isSidebarOpen = ref(true);
 
-// Refs for scrolling
+// Refs for scrolling and focus
 const typingAreaRef = ref(null);
+const hiddenInputRef = ref(null);
 
 // Derived state
 const wordArray = computed(() => challenge.value ? challenge.value.content_to_type.split(' ') : []);
 const typedWords = computed(() => userInput.value.split(' '));
 const currentWordIndex = computed(() => typedWords.value.length - 1);
+const currentCharIndex = computed(() => typedWords.value[currentWordIndex.value].length);
 
 // Result for each word
 const completedWordResults = computed(() => {
@@ -64,10 +67,30 @@ const resetState = () => {
   results.value = null;
   clearInterval(timerInterval.value);
   timeLeft.value = selectedMode.value === 'time' ? selectedValue.value : null;
+  nextTick(() => hiddenInputRef.value?.focus());
 };
 
-onMounted(fetchChallenge);
-onUnmounted(() => clearInterval(timerInterval.value));
+onMounted(() => {
+  fetchChallenge();
+  window.addEventListener('keydown', handleGlobalKeydown);
+});
+
+onUnmounted(() => {
+  clearInterval(timerInterval.value);
+  window.removeEventListener('keydown', handleGlobalKeydown);
+});
+
+const handleGlobalKeydown = (e) => {
+  if (isFinished.value) return;
+  // If user starts typing anywhere, focus the hidden input
+  if (e.key.length === 1 || e.key === 'Backspace') {
+    hiddenInputRef.value?.focus();
+  }
+};
+
+const focusInput = () => {
+  hiddenInputRef.value?.focus();
+};
 
 // Auto-scroll logic
 watch(currentWordIndex, () => {
@@ -112,8 +135,25 @@ const handleInput = (e) => {
   if (isFinished.value) return;
   startTimer();
 
+  let val = userInput.value;
+  if (val.startsWith(' ')) {
+    val = val.trimStart();
+  }
+  if (val.includes('  ')) {
+    val = val.replace(/  +/g, ' ');
+  }
+  if (val !== userInput.value) {
+    userInput.value = val;
+  }
+
   if (selectedMode.value === 'words' && challenge.value) {
-    if (typedWords.value.length > wordArray.value.length || userInput.value === challenge.value.content_to_type) {
+    const currentTyped = val.split(' ');
+    const isLastWord = currentTyped.length === wordArray.value.length;
+    const lastWordTyped = currentTyped[currentTyped.length - 1];
+    const lastWordTarget = wordArray.value[wordArray.value.length - 1];
+
+    if (currentTyped.length > wordArray.value.length || 
+       (isLastWord && lastWordTyped === lastWordTarget)) {
       finishChallenge();
     }
   }
@@ -174,90 +214,93 @@ const getWordClass = (index) => {
   return index === currentWordIndex.value ? 'current-word' : '';
 };
 
+const getRenderedChars = (wIdx) => {
+  const target = wordArray.value[wIdx] || '';
+  const typed = typedWords.value[wIdx] || '';
+  const len = Math.max(target.length, typed.length);
+  const chars = [];
+  for (let i = 0; i < len; i++) {
+    chars.push({
+      char: i < target.length ? target[i] : typed[i]
+    });
+  }
+  return chars;
+};
+
 const getCharClass = (wordIndex, charIndex) => {
   const typedWord = typedWords.value[wordIndex];
   if (!typedWord || charIndex >= typedWord.length) return '';
-  const targetWord = wordArray.value[wordIndex];
-  if (!targetWord) return '';
+  const targetWord = wordArray.value[wordIndex] || '';
+  if (charIndex >= targetWord.length) return 'text-danger-char extra-char';
   return typedWord[charIndex] === targetWord[charIndex] ? 'text-success' : 'text-danger-char';
+};
+
+const isCurrentChar = (wIdx, cIdx) => {
+  return wIdx === currentWordIndex.value && cIdx === currentCharIndex.value;
 };
 </script>
 
 <template>
-  <div class="row g-4 flex-grow-1 align-items-stretch mb-4">
-    <!-- Recent Sprints Sidebar -->
-    <div class="col-lg-2 d-flex">
-      <div class="y2k-box w-100 d-flex flex-column no-round border-main bg-purple overflow-hidden">
-        <div class="card-header bg-info text-black fw-bold no-round py-3 px-3">
-          <i class="bi bi-clock-history me-2"></i>RECENT
+  <div v-if="challenge" class="d-flex flex-column flex-grow-1 h-100">
+    
+    <!-- Header with controls -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex align-items-center gap-4">
+        <h2 class="m-0 font-pixel h1">
+          {{ challenge.title }}
+        </h2>
+        <span v-if="selectedMode === 'time'" class="badge border border-info text-uppercase no-round text-info fs-5 py-2 px-3">
+          {{ timeLeft }}s
+        </span>
+      </div>
+
+      <div class="d-flex gap-3">
+        <div class="btn-group no-round border-main-thin">
+          <button v-for="m in ['time', 'words']" :key="m" @click="setMode(m)" :class="['btn btn-std-font no-round', selectedMode === m ? 'btn-primary' : 'btn-outline-primary']">
+            {{ m.toUpperCase() }}
+          </button>
         </div>
-        <div class="card-body p-0 custom-scrollbar overflow-auto flex-grow-1">
-          <ul class="list-group list-group-flush no-round">
-            <li v-for="sprint in recentSprints" :key="sprint.id" class="list-group-item bg-transparent border-secondary text-light d-flex justify-content-between align-items-center py-3 px-3">
-              <div>
-                <div class="small text-info text-uppercase font-monospace">{{ sprint.mode }}</div>
-                <div class="h4 mb-0 fw-bold">{{ sprint.wpm }} <small class="fs-6 opacity-50">WPM</small></div>
-              </div>
-              <div class="text-end">
-                <div class="small opacity-50 font-monospace">ACC</div>
-                <div class="fw-bold text-success">{{ sprint.accuracy }}%</div>
-              </div>
-            </li>
-            <li v-if="recentSprints.length === 0" class="list-group-item bg-transparent text-center py-5 opacity-50">
-              No sprints recorded
-            </li>
-          </ul>
+        <div class="btn-group no-round border-main-thin">
+          <button v-for="v in modes[selectedMode]" :key="v" @click="setValue(v)" :class="['btn btn-std-font no-round', selectedValue === v ? 'btn-info' : 'btn-outline-info']">
+            {{ v }}
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Main Challenge Area -->
-    <div class="col-lg-10 d-flex">
-      <div v-if="challenge" class="y2k-box flex-grow-1 d-flex flex-column p-4 border-main bg-purple no-round">
+    <div class="row g-4 flex-grow-1">
+      <!-- Main Challenge Area -->
+      <div :class="[isSidebarOpen ? 'col-lg-9' : 'col-lg-11', 'd-flex flex-column transition-all']">
         
-        <!-- Aligned Top Bar -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <div class="d-flex align-items-center gap-4">
-            <h2 class="text-primary m-0 font-pixel h1">
-              {{ challenge.title }}
-            </h2>
-            <span v-if="selectedMode === 'time'" class="badge border border-info text-uppercase no-round text-info fs-5 py-2 px-3">
-              {{ timeLeft }}s
+        <!-- Unified Typing Engine -->
+        <div 
+          ref="typingAreaRef" 
+          @click="focusInput"
+          class="typing-engine position-relative mb-4 p-4 bg-black border-main font-monospace fs-3 text-white-50 no-round custom-scrollbar overflow-auto cursor-text"
+        >
+          <!-- Hidden Input Capture -->
+          <input
+            ref="hiddenInputRef"
+            v-model="userInput"
+            @input="handleInput"
+            :disabled="isFinished"
+            type="text"
+            class="hidden-input"
+            autofocus
+          />
+
+          <!-- Text Render Layer -->
+          <div class="text-layer">
+            <span class="word-wrapper" v-for="(word, wIdx) in wordArray" :key="wIdx">
+              <span :class="['word-span', getWordClass(wIdx)]">
+                <span v-for="(charObj, cIdx) in getRenderedChars(wIdx)" :key="cIdx" :class="['char-span', getCharClass(wIdx, cIdx), { 'is-current': isCurrentChar(wIdx, cIdx) }]">
+                  {{ charObj.char }}
+                </span>
+              </span>
+              <span :class="['space', { 'is-current': isCurrentChar(wIdx, getRenderedChars(wIdx).length) }]">&nbsp;</span>
             </span>
           </div>
-
-          <div class="d-flex gap-3">
-            <div class="btn-group no-round border-main-thin">
-              <button v-for="m in ['time', 'words']" :key="m" @click="setMode(m)" :class="['btn btn-std-font no-round', selectedMode === m ? 'btn-primary' : 'btn-outline-primary']">
-                {{ m.toUpperCase() }}
-              </button>
-            </div>
-            <div class="btn-group no-round border-main-thin">
-              <button v-for="v in modes[selectedMode]" :key="v" @click="setValue(v)" :class="['btn btn-std-font no-round', selectedValue === v ? 'btn-info' : 'btn-outline-info']">
-                {{ v }}
-              </button>
-            </div>
-          </div>
         </div>
-        
-        <!-- Typing Area -->
-        <div ref="typingAreaRef" class="typing-area position-relative mb-4 p-3 bg-black border border-secondary font-monospace fs-4 text-white-50 no-round custom-scrollbar overflow-auto">
-          <span v-for="(word, wIdx) in wordArray" :key="wIdx" :class="['word-span', getWordClass(wIdx)]">
-            <span v-for="(char, cIdx) in word" :key="cIdx" :class="getCharClass(wIdx, cIdx)">{{ char }}</span>
-            <span class="space">&nbsp;</span>
-          </span>
-        </div>
-
-        <!-- Input Box -->
-        <textarea
-          v-model="userInput"
-          @input="handleInput"
-          :disabled="isFinished"
-          class="form-control form-control-lg mb-3 bg-grey text-white border-secondary font-monospace no-round custom-scrollbar"
-          placeholder="Start typing..."
-          rows="3"
-          autofocus
-        ></textarea>
 
         <!-- Persistent Restart Button -->
         <div class="text-center mt-2 mb-3">
@@ -281,6 +324,41 @@ const getCharClass = (wordIndex, charIndex) => {
           </div>
         </div>
       </div>
+
+      <!-- Recent Sprints Sidebar -->
+      <div :class="[isSidebarOpen ? 'col-lg-3' : 'col-lg-1', 'd-flex flex-column transition-all']">
+        <div 
+          :class="['y2k-sidebar-card d-flex flex-column h-100 bg-purple overflow-hidden cursor-pointer border-main', !isSidebarOpen ? 'collapsed-sidebar' : '']"
+          @click="isSidebarOpen = !isSidebarOpen"
+        >
+          <div class="card-header bg-info text-black fw-bold no-round py-2 px-3 small d-flex justify-content-between align-items-center">
+            <span v-if="isSidebarOpen"><i class="bi bi-clock-history me-2"></i>RECENT SPRINTS</span>
+            <i :class="['bi', isSidebarOpen ? 'bi-chevron-right' : 'bi-chevron-left mx-auto']"></i>
+          </div>
+          
+          <div v-if="isSidebarOpen" class="card-body p-0 custom-scrollbar overflow-auto flex-grow-1" @click.stop>
+            <ul class="list-group list-group-flush no-round">
+              <li v-for="sprint in recentSprints" :key="sprint.id" class="list-group-item bg-transparent border-main-thin border-top-0 border-start-0 border-end-0 text-light d-flex justify-content-between align-items-center py-2 px-3">
+                <div>
+                  <div class="small text-info text-uppercase font-monospace" style="font-size: 0.7rem;">{{ sprint.mode }}</div>
+                  <div class="h5 mb-0 fw-bold">{{ sprint.wpm }} <small class="fs-6 opacity-50">WPM</small></div>
+                </div>
+                <div class="text-end">
+                  <div class="small opacity-50 font-monospace" style="font-size: 0.7rem;">ACC</div>
+                  <div class="fw-bold text-success">{{ sprint.accuracy }}%</div>
+                </div>
+              </li>
+              <li v-if="recentSprints.length === 0" class="list-group-item bg-transparent text-center py-5 opacity-50 border-0">
+                No sprints recorded
+              </li>
+            </ul>
+          </div>
+          
+          <div v-else class="flex-grow-1 d-flex align-items-center justify-content-center">
+             <div class="vertical-text fw-bold text-info small">RECENT</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -293,46 +371,71 @@ const getCharClass = (wordIndex, charIndex) => {
 .bg-grey { background-color: #2a2a2a !important; }
 
 /* Main consistent border color */
-.border-main { border: 3px solid rgba(255, 255, 255, 0.2) !important; }
-.border-main-thin { border: 1px solid rgba(255, 255, 255, 0.2) !important; }
-
-.y2k-box {
-  min-height: 100%;
-  background: var(--y2k-bg);
-}
+.border-main { border: 2px solid rgba(0, 255, 255, 0.25) !important; }
+.border-main-thin { border: 1px solid rgba(0, 255, 255, 0.25) !important; }
 
 .font-pixel {
   font-family: 'VT323', monospace !important;
   font-size: 2.5rem !important;
 }
 
-.typing-area { 
-  height: 120px; 
-  line-height: 1.6; 
+.typing-engine { 
+  height: 400px; 
+  line-height: 1.8; 
   white-space: pre-wrap; 
   word-break: break-all; 
   scroll-behavior: smooth;
+  outline: none;
 }
 
-textarea { 
-  height: 120px; 
-  resize: none; 
+.hidden-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
-textarea::placeholder {
-  color: rgba(255, 255, 255, 0.4) !important;
+.word-wrapper { display: inline-block; }
+.word-span { display: inline-block; padding: 0 4px; position: relative; }
+.char-span { position: relative; }
+.space { position: relative; display: inline-block; width: 0.5em; }
+
+/* The Cursor */
+.is-current::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 10%;
+  width: 2px;
+  height: 80%;
+  background-color: var(--y2k-cyan);
+  animation: blink 1s infinite;
+  box-shadow: 0 0 8px var(--y2k-cyan);
 }
 
-.word-span { display: inline-block; padding: 0 2px; }
-.current-word { background: rgba(13, 110, 253, 0.25); border-bottom: 2px solid #0d6efd; }
-.text-success { color: #00ff88 !important; }
-.text-danger { color: #ff3366 !important; text-decoration: line-through; }
-.text-danger-char { color: #ff3366 !important; background: rgba(255, 51, 102, 0.2); }
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
 
-textarea:focus { border-color: #0d6efd; outline: none; }
+.current-word { border-bottom: 2px solid rgba(13, 110, 253, 0.3); }
 
-.list-group-item { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
-.list-group-item:hover { background: rgba(255, 255, 255, 0.05); }
+.text-success { 
+  color: #00ff88 !important; 
+  text-shadow: 0 0 5px #00ff88;
+  opacity: 1;
+}
+.text-danger { 
+  color: #ff3366 !important; 
+  text-decoration: line-through;
+  opacity: 1;
+}
+.text-danger-char { 
+  color: #ff3366 !important; 
+  background: rgba(255, 51, 102, 0.2);
+  opacity: 1;
+}
+
+.list-group-item:hover { background: rgba(0, 255, 255, 0.05) !important; }
 
 .btn-std-font {
   font-family: sans-serif !important;
@@ -349,6 +452,41 @@ textarea:focus { border-color: #0d6efd; outline: none; }
   transform: rotate(90deg);
   color: white;
   background: transparent !important;
+}
+
+.transition-all {
+  transition: all 0.3s ease-in-out;
+}
+
+.y2k-sidebar-card {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0;
+  min-height: 300px;
+}
+
+.y2k-sidebar-card .card-header {
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.collapsed-sidebar {
+  opacity: 0.7;
+}
+
+.collapsed-sidebar:hover {
+  opacity: 1;
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  letter-spacing: 4px;
 }
 
 /* Custom scrollbar */

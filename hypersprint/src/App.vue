@@ -102,7 +102,7 @@ const route = useRoute();
 
 .y2k-nav {
   background: var(--y2k-bg);
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(0, 255, 255, 0.25);
   z-index: 1000;
   border-radius: 0 !important;
 }
@@ -153,13 +153,13 @@ const route = useRoute();
   width: 100%;
   min-height: 60vh;
   padding: 3rem;
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(0, 255, 255, 0.25);
   border-radius: 0 !important;
 }
 
 .y2k-footer {
   background: var(--y2k-bg);
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(0, 255, 255, 0.25);
   z-index: 1000;
   position: relative;
   border-radius: 0 !important;
@@ -186,3 +186,4 @@ const route = useRoute();
   text-shadow: 0 0 5px var(--y2k-lime);
 }
 </style>
+>
