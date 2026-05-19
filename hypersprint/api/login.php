@@ -5,8 +5,8 @@ require_once __DIR__ . '/db.php';
 require_method('POST');
 
 $body = get_json_body();
-$username = sanitize_string($body['username'] ?? '');
-$password = $body['password'] ?? '';
+$username = sanitize_string(isset($body['username']) ? $body['username'] : '');
+$password = isset($body['password']) ? $body['password'] : '';
 
 if (empty($username) || empty($password)) {
     send_json(['success' => false, 'error' => 'Username and password are required'], 400);
