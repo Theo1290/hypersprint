@@ -16,7 +16,7 @@ const usernameSpeedTextbox = ref(null)
 const passwordSpeedTextbox = ref(null)
 
 // Retrieve data from SpeedTextbox and process it
-const handleLogin = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault()
   if (!usernameSpeedTextbox.value || !passwordSpeedTextbox.value) return
 
@@ -67,7 +67,7 @@ const handleLogin = async (e) => {
         {{ error }}
       </div>
 
-      <form @submit="handleLogin" style="margin-left: 1.2em;">
+      <form @submit="handleSubmit" style="margin-left: 1.2em;">
         <div>
           <!-- Username input (uses SpeedTextbox component) -->
           <label for="username" class="y2k-note">Username</label>
@@ -91,7 +91,7 @@ const handleLogin = async (e) => {
             class="btn y2k-btn btn-primary mt-3" 
             :disabled="loading"
           >
-            {{ loading ? 'AUTHENTICATING...' : 'SUBMIT' }}
+            {{ loading ? 'AUTHENTICATING...' : 'LOGIN' }}
           </button>
         </div>
       </form>

@@ -249,7 +249,7 @@ defineExpose({
       @input="handleInput"
       @focus="handleFocus"
       @blur="handleBlur"
-      class="speed-input form-control form-control-lg md-2 bg-grey border-secondary font-monospace text-white"
+      class="speed-input form-control form-control-lg md-2 bg-grey border-secondary no-round font-monospace text-white"
       autocapitalize="none"
       autocorrect="off"
       autofocus
