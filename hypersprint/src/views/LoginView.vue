@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { callApi } from '@/utils/api'
+import { useAuthStore } from '@/stores/auth'
 import SpeedTextbox from '@/components/input/SpeedTextbox.vue'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 // UI state
 const is_authenticated = ref(false)
@@ -27,12 +29,13 @@ const handleSubmit = async (e) => {
   const dataPassword = passwordSpeedTextbox.value.submit()
 
   try {
-    const res = await callApi('/cos30043/s103982457/Project/api/login.php', 'POST', {
+    const res = await callApi('/api/login.php', 'POST', {
       username: dataUsername.text,
       password: dataPassword.text
     })
 
     if (res.success) {
+      auth.setAuth(res.user)
       is_authenticated.value = true
       // Optional: Redirect to profile after a short delay
       setTimeout(() => {

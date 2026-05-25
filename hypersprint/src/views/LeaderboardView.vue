@@ -62,7 +62,7 @@ const fetchLeaderboard = async () => {
   error.value = ''
 
   try {
-    const response = await fetch('/cos30043/s103982457/Project/api/leaderboard.php', {
+    const response = await fetch('/api/leaderboard.php', {
       method: 'GET',
       credentials: 'include',
     })

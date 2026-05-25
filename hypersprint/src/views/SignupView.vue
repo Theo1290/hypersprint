@@ -2,10 +2,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { callApi } from '@/utils/api'
+import { useAuthStore } from '@/stores/auth'
 import SpeedTextbox from '@/components/input/SpeedTextbox.vue'
 import CaptchaQuery from '@/components/input/CaptchaQuery.vue'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 // Interface state
 const is_authenticated = ref(false)
@@ -47,13 +49,14 @@ const handleSubmit = async (e) => {
   loading.value = true
 
   try {
-    const res = await callApi('/cos30043/s103982457/Project/api/login.php', 'POST', {
+    const res = await callApi('/api/signup.php', 'POST', {
       username: dataUsername.text,
       password: dataPassword.text,
       confirm: dataConfirm.text
     })
 
     if (res.success) {
+      auth.setAuth(res.user)
       is_authenticated.value = true
       // Redirect to profile after a short delay
       setTimeout(() => {

@@ -10,7 +10,7 @@ const recent_results = ref([])
 
 const loadHomeData = async () => {
   try {
-    const data = await callApi('/cos30043/s103982457/Project/api/home.php')
+    const data = await callApi('/api/home.php')
     is_authenticated.value = data.is_authenticated
     if (data.user_stats) user_stats.value = data.user_stats
     if (data.featured_challenges) featured_challenges.value = data.featured_challenges

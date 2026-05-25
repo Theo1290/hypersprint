@@ -2,10 +2,7 @@
 require __DIR__ . '/common.php';
 require __DIR__ . '/db.php';
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_set_cookie_params(0, '/');
-    session_start();
-}
+start_session();
 
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 

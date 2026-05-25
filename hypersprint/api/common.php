@@ -27,11 +27,18 @@ function require_method($method)
     }
 }
 
-function require_auth()
+function start_session()
 {
-    if (session_status() !== PHP_SESSION_ACTIVE) {
+    if (session_status() === PHP_SESSION_NONE) {
+        // Compatibility for older PHP versions on Mercury
+        session_set_cookie_params(0, '/');
         session_start();
     }
+}
+
+function require_auth()
+{
+    start_session();
 
     if (empty($_SESSION['user_id'])) {
         send_json(['error' => 'Authentication required'], 401);
@@ -42,7 +49,13 @@ function require_auth()
 
 function generate_uuid()
 {
-    $data = random_bytes(16);
+    // Compatible with PHP 5.6 and older (Mercury)
+    if (function_exists('random_bytes')) {
+        $data = random_bytes(16);
+    } else {
+        $data = openssl_random_pseudo_bytes(16);
+    }
+    
     $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
     $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
 
@@ -52,4 +65,18 @@ function generate_uuid()
 function sanitize_string($value)
 {
     return trim((string) $value);
+}
+
+// Compatibility for PHP versions older than 5.5
+if (!function_exists('password_hash')) {
+    if (!defined('PASSWORD_DEFAULT')) define('PASSWORD_DEFAULT', 1);
+    function password_hash($password, $algo) {
+        return md5($password); 
+    }
+}
+
+if (!function_exists('password_verify')) {
+    function password_verify($password, $hash) {
+        return md5($password) === $hash;
+    }
 }

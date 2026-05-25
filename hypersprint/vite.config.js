@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 export default defineConfig({
-  base: '/cos30043/s103982457/Project/dist/',
+  base: '/cos30043/s104565600/hypersprint/dist/',
   plugins: [
     vue(),
     vueDevTools(),
@@ -14,4 +14,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://mercury.swin.edu.au/cos30043/s104565600/hypersprint',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
+    }
+  }
 })

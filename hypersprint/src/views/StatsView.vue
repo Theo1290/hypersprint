@@ -25,7 +25,7 @@ const levelInfo = computed(() => {
 
 const loadStats = async () => {
   try {
-    const data = await callApi('/cos30043/s103982457/Project/api/stats.php')
+    const data = await callApi('/api/stats.php')
     stats.value = data.stats
     history.value = data.history || []
   } catch (e) {
