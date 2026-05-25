@@ -47,7 +47,7 @@ const completedWordResults = computed(() => {
 const fetchChallenge = async () => {
   resetState();
   try {
-    const data = await callApi(`/cos30043/s103982457/Project/api/challenges.php?mode=${selectedMode.value}&value=${selectedValue.value}`);
+    const data = await callApi(`/api/challenges.php?mode=${selectedMode.value}&value=${selectedValue.value}`);
     if (data.challenge) {
       challenge.value = data.challenge;
       if (selectedMode.value === 'time') {
@@ -175,7 +175,7 @@ const finishChallenge = async () => {
   });
 
   try {
-    await callApi('/cos30043/s103982457/Project/api/results.php', 'POST', {
+    await callApi('/api/results.php', 'POST', {
       challenge_uuid: challenge.value.challenge_id,
       wpm: stats.wpm,
       accuracy: stats.accuracy,

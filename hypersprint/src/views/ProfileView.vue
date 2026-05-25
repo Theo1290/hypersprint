@@ -1,24 +1,30 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { callApi } from '@/utils/api'
+import AuthRequired from '@/components/AuthRequired.vue'
 
 const user = ref(null)
 const recentResults = ref([])
 const loading = ref(true)
 const error = ref(null)
+const authError = ref(false)
 const editMode = ref(false)
 const editUsername = ref('')
 const editEmail = ref('')
  
 onMounted(async () => {
   try {
-    const res = await callApi('/cos30043/s103982457/Project/api/profile.php')
+    const res = await callApi('/api/profile.php')
     user.value = res.user
     recentResults.value = res.recent_results || []
     editUsername.value = res.user.username
     editEmail.value = res.user.email
   } catch (e) {
-    error.value = 'Failed to load profile.'
+    if (e.message.includes('Authentication required')) {
+      authError.value = true
+    } else {
+      error.value = 'Failed to load profile.'
+    }
   } finally {
     loading.value = false
   }
@@ -30,7 +36,7 @@ function toggleEdit() {
  
 async function saveProfile() {
   try {
-    await callApi('/cos30043/s103982457/Project/api/profile.php', 'POST', {
+    await callApi('/api/profile.php', 'POST', {
       username: editUsername.value,
       email: editEmail.value
     })

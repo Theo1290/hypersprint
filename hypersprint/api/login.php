@@ -4,10 +4,7 @@ require __DIR__ . '/db.php';
 
 require_method('POST');
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_set_cookie_params(0, '/');
-    session_start();
-}
+start_session();
 
 $data = get_json_body();
 

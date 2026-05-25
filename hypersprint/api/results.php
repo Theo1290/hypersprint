@@ -6,10 +6,7 @@ require_method('POST');
 
 $user_id = null;
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_set_cookie_params(0, '/');
-    session_start();
-}
+start_session();
 
 if (!empty($_SESSION['user_id'])) {
     $user_id = (int)$_SESSION['user_id'];
