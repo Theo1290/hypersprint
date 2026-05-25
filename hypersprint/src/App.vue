@@ -1,6 +1,24 @@
 <script setup>
+import { onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-const route = useRoute();
+import { useAuthStore } from '@/stores/auth'
+import { callApi } from '@/utils/api'
+
+const route = useRoute()
+const auth = useAuthStore()
+
+onMounted(async () => {
+  // Check if user is already logged in on Mercury
+  try {
+    const res = await callApi('/api/profile.php')
+    if (res.user) {
+      auth.setAuth(res.user)
+    }
+  } catch (e) {
+    // Not logged in or error, keep isAuthenticated = false
+    auth.clearAuth()
+  }
+})
 </script>
 
 <template>
@@ -31,10 +49,10 @@ const route = useRoute();
               <li class="nav-item">
                 <RouterLink class="nav-link" to="/leaderboard">LEADERBOARD</RouterLink>
               </li>
-              <li class="nav-item">
+              <li class="nav-item" v-if="auth.isAuthenticated">
                 <RouterLink class="nav-link" to="/stats">STATS</RouterLink>
               </li>
-              <li class="nav-item">
+              <li class="nav-item" v-if="auth.isAuthenticated">
                 <RouterLink class="nav-link" to="/social-feed">FEED</RouterLink>
               </li>
               <li class="nav-item dropdown">
@@ -42,12 +60,17 @@ const route = useRoute();
                   <i class="bi bi-person-circle y2k-user-icon"></i>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end y2k-dropdown" aria-labelledby="navbarDropdown">
-                  <li><RouterLink class="dropdown-item" to="/profile">PROFILE</RouterLink></li>
-                  <li><RouterLink class="dropdown-item" to="/achievements">ACHIEVEMENTS</RouterLink></li>
-                  <li><RouterLink class="dropdown-item" to="/friends">FRIENDS</RouterLink></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><RouterLink class="dropdown-item" to="/login">LOGIN</RouterLink></li>
-                  <li><RouterLink class="dropdown-item" to="/signup">SIGNUP</RouterLink></li>
+                  <template v-if="auth.isAuthenticated">
+                    <li><RouterLink class="dropdown-item" to="/profile">PROFILE</RouterLink></li>
+                    <li><RouterLink class="dropdown-item" to="/achievements">ACHIEVEMENTS</RouterLink></li>
+                    <li><RouterLink class="dropdown-item" to="/friends">FRIENDS</RouterLink></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><RouterLink class="dropdown-item" to="/logout">LOGOUT</RouterLink></li>
+                  </template>
+                  <template v-else>
+                    <li><RouterLink class="dropdown-item" to="/login">LOGIN</RouterLink></li>
+                    <li><RouterLink class="dropdown-item" to="/signup">SIGNUP</RouterLink></li>
+                  </template>
                 </ul>
               </li>
             </ul>
