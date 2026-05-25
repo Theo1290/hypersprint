@@ -12,7 +12,7 @@ const editEmail = ref('')
  
 onMounted(async () => {
   try {
-    const res = await callApi('/api/profile.php')
+    const res = await callApi('/cos30043/s103982457/Project/api/profile.php')
     user.value = res.user
     recentResults.value = res.recent_results || []
     editUsername.value = res.user.username
@@ -30,7 +30,7 @@ function toggleEdit() {
  
 async function saveProfile() {
   try {
-    await callApi('/api/profile.php', 'POST', {
+    await callApi('/cos30043/s103982457/Project/api/profile.php', 'POST', {
       username: editUsername.value,
       email: editEmail.value
     })

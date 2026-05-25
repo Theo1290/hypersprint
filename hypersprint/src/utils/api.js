@@ -5,7 +5,7 @@
 
 import { WORDS } from './wordList';
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 export async function callApi(path, method = 'GET', body = null) {
   if (USE_MOCK) {

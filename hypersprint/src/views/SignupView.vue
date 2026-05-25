@@ -47,7 +47,7 @@ const handleSubmit = async (e) => {
   loading.value = true
 
   try {
-    const res = await callApi('/api/login.php', 'POST', {
+    const res = await callApi('/cos30043/s103982457/Project/api/login.php', 'POST', {
       username: dataUsername.text,
       password: dataPassword.text,
       confirm: dataConfirm.text

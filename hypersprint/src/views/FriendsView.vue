@@ -14,7 +14,7 @@ const error = ref(null)
  
 onMounted(async () => {
   try {
-    const res = await callApi('/api/friends.php')
+    const res = await callApi('/cos30043/s103982457/Project/api/friends.php')
     friends.value = res.friends || []
     friendRequests.value = res.friend_requests || []
     sentRequests.value = res.sent_requests || []
@@ -29,7 +29,7 @@ async function searchUsers() {
   if (!searchQuery.value.trim()) return
   searching.value = true
   try {
-    const res = await callApi(`/api/friends.php?search=${encodeURIComponent(searchQuery.value)}`)
+    const res = await callApi(`/cos30043/s103982457/Project/api/friends.php?search=${encodeURIComponent(searchQuery.value)}`)
     searchResults.value = res.results || []
   } catch (e) {
     error.value = 'Search failed.'
@@ -39,13 +39,13 @@ async function searchUsers() {
 }
  
 async function sendRequest(userId) {
-  await callApi('/api/friends.php', 'POST', { action: 'send_request', to_user_id: userId })
+  await callApi('/cos30043/s103982457/Project/api/friends.php', 'POST', { action: 'send_request', to_user_id: userId })
   const user = searchResults.value.find(u => u.user_id === userId)
   if (user) user.request_sent = true
 }
  
 async function acceptRequest(userId) {
-  await callApi('/api/friends.php', 'POST', { action: 'accept', from_user_id: userId })
+  await callApi('/cos30043/s103982457/Project/api/friends.php', 'POST', { action: 'accept', from_user_id: userId })
   const req = friendRequests.value.find(r => r.from_user_id === userId)
   if (req) {
     friendRequests.value = friendRequests.value.filter(r => r.from_user_id !== userId)
@@ -54,12 +54,12 @@ async function acceptRequest(userId) {
 }
  
 async function declineRequest(userId) {
-  await callApi('/api/friends.php', 'POST', { action: 'decline', from_user_id: userId })
+  await callApi('/cos30043/s103982457/Project/api/friends.php', 'POST', { action: 'decline', from_user_id: userId })
   friendRequests.value = friendRequests.value.filter(r => r.from_user_id !== userId)
 }
  
 async function removeFriend(userId) {
-  await callApi('/api/friends.php', 'POST', { action: 'remove', friend_id: userId })
+  await callApi('/cos30043/s103982457/Project/api/friends.php', 'POST', { action: 'remove', friend_id: userId })
   friends.value = friends.value.filter(f => f.user_id !== userId)
 }
  
