@@ -241,7 +241,7 @@ const isCurrentChar = (wIdx, cIdx) => {
 </script>
 
 <template>
-  <div v-if="challenge" class="d-flex flex-column flex-grow-1 h-100">
+  <div v-if="challenge" class="y2k-page-wrapper d-flex flex-column flex-grow-1 h-100">
     
     <!-- Header with controls -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -362,7 +362,6 @@ const isCurrentChar = (wIdx, cIdx) => {
     </div>
   </div>
 </template>
-
 <style scoped>
 .no-round { border-radius: 0 !important; }
 

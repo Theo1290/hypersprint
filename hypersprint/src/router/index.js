@@ -47,6 +47,12 @@ const router = createRouter({
       meta: { customLayout: true }
     },
     {
+      path: '/race/:uuid',
+      name: 'race',
+      component: () => import('../views/RaceView.vue'),
+      meta: { customLayout: true }
+    },
+    {
       path: '/leaderboard',
       name: 'leaderboard',
       component: () => import('../views/LeaderboardView.vue'),
