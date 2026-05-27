@@ -35,6 +35,18 @@ const router = createRouter({
       component: () => import('../views/ChallengeView.vue'),
     },
     {
+      path: '/singleplayer',
+      name: 'singleplayer',
+      component: () => import('../views/SingleplayerView.vue'),
+      meta: { customLayout: true }
+    },
+    {
+      path: '/multiplayer',
+      name: 'multiplayer',
+      component: () => import('../views/MultiplayerView.vue'),
+      meta: { customLayout: true }
+    },
+    {
       path: '/leaderboard',
       name: 'leaderboard',
       component: () => import('../views/LeaderboardView.vue'),
