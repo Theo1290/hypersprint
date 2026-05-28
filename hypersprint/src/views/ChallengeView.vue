@@ -124,8 +124,4 @@ const selectMode = (mode) => {
   color: black;
   border-color: var(--y2k-magenta);
 }
-
-.glow-text-cyan { color: var(--y2k-cyan); text-shadow: 0 0 10px var(--y2k-cyan); }
-.glow-text-magenta { color: var(--y2k-magenta); text-shadow: 0 0 10px var(--y2k-magenta); }
-.glow-text-lime { color: var(--y2k-lime); text-shadow: 0 0 10px var(--y2k-lime); }
 </style>

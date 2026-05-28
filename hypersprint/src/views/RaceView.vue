@@ -363,10 +363,9 @@ watch(currentWordIndex, () => {
             </div>
 
             <div class="d-flex flex-column gap-3">
-                <button @click="router.push('/multiplayer')" class="btn-y2k btn-cyan-glow">NEW CHALLENGE</button>
-                <button @click="router.push('/')" class="btn-y2k btn-magenta-glow">RETURN TO HUB</button>
-            </div>
-        </div>
+                <button @click="router.push('/multiplayer')" class="y2k-btn y2k-btn-cyan">NEW CHALLENGE</button>
+                <button @click="router.push('/')" class="y2k-btn y2k-btn-magenta">RETURN TO HUB</button>
+            </div>        </div>
     </div>
   </div>
 </div>
@@ -506,10 +505,6 @@ watch(currentWordIndex, () => {
   opacity: 1;
 }
 
-.glow-text-cyan { color: var(--y2k-cyan); text-shadow: 0 0 8px var(--y2k-cyan); }
-.glow-text-magenta { color: var(--y2k-magenta); text-shadow: 0 0 8px var(--y2k-magenta); }
-.glow-text-lime { color: var(--y2k-lime); text-shadow: 0 0 8px var(--y2k-lime); }
-
 /* Result Modal */
 .result-modal-overlay {
     position: fixed;
@@ -527,38 +522,6 @@ watch(currentWordIndex, () => {
     max-width: 600px;
     width: 90%;
     box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
-}
-
-.btn-y2k {
-    font-family: 'VT323', monospace;
-    font-size: 1.8rem;
-    padding: 10px 25px;
-    border: 3px solid transparent;
-    cursor: pointer;
-    transition: 0.3s;
-    text-transform: uppercase;
-}
-
-.btn-cyan-glow {
-    background: var(--y2k-cyan);
-    color: black;
-}
-
-.btn-cyan-glow:hover {
-    box-shadow: 0 0 20px var(--y2k-cyan);
-    transform: scale(1.05);
-}
-
-.btn-magenta-glow {
-    background: transparent;
-    border-color: var(--y2k-magenta);
-    color: var(--y2k-magenta);
-}
-
-.btn-magenta-glow:hover {
-    background: var(--y2k-magenta);
-    color: white;
-    box-shadow: 0 0 20px var(--y2k-magenta);
 }
 
 .font-pixel { font-family: 'VT323', monospace; }

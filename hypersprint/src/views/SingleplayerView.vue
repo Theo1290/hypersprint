@@ -265,12 +265,12 @@ const getRenderedChars = (wIdx) => {
 
       <div class="d-flex gap-3">
         <div class="btn-group no-round">
-          <button v-for="m in ['time', 'words']" :key="m" @click="setMode(m)" :class="['btn-y2k no-round', selectedMode === m ? 'active-mode' : '']">
+          <button v-for="m in ['time', 'words']" :key="m" @click="setMode(m)" :class="['y2k-btn y2k-btn-cyan no-round', selectedMode === m ? 'active-mode' : '']">
             {{ m.toUpperCase() }}
           </button>
         </div>
         <div class="btn-group no-round">
-          <button v-for="v in modes[selectedMode]" :key="v" @click="setValue(v)" :class="['btn-y2k no-round', selectedValue === v ? 'active-mode-alt' : '']">
+          <button v-for="v in modes[selectedMode]" :key="v" @click="setValue(v)" :class="['y2k-btn y2k-btn-magenta no-round', selectedValue === v ? 'active-mode-alt' : '']">
             {{ v }}
           </button>
         </div>
@@ -535,36 +535,15 @@ const getRenderedChars = (wIdx) => {
   font-size: 1.4rem !important;
 }
 
-.btn-y2k {
-  background: transparent;
-  border: 2px solid var(--y2k-cyan);
-  color: var(--y2k-cyan);
-  font-family: 'VT323', monospace;
-  font-size: 1.5rem;
-  letter-spacing: 2px;
-  padding: 0.4rem 1.2rem;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: 0.2s;
-}
-
-.btn-y2k:hover {
-  background: var(--y2k-cyan);
-  color: #000;
-  box-shadow: 0 0 10px var(--y2k-cyan);
-}
-
 .active-mode {
   background: var(--y2k-cyan);
   color: #000;
-  box-shadow: 0 0 10px var(--y2k-cyan);
 }
 
 .active-mode-alt {
   border-color: var(--y2k-magenta);
   background: var(--y2k-magenta);
   color: #000;
-  box-shadow: 0 0 10px var(--y2k-magenta);
 }
 
 .restart-btn {

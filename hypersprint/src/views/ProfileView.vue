@@ -88,7 +88,7 @@ function formatDate(dt) {
           <p class="profile-email">{{ user.email }}</p>
         </div>
         <div class="col-12 col-md-auto mt-3 mt-md-0">
-          <button class="btn-y2k" @click="toggleEdit">
+          <button class="y2k-btn y2k-btn-cyan" @click="toggleEdit">
             {{ editMode ? 'CANCEL' : 'EDIT PROFILE' }}
           </button>
         </div>
@@ -107,7 +107,7 @@ function formatDate(dt) {
             <input v-model="editEmail" class="y2k-input w-100" type="email" />
           </div>
           <div class="col-12">
-            <button class="btn-y2k btn-y2k-lime" @click="saveProfile">SAVE CHANGES</button>
+            <button class="y2k-btn" @click="saveProfile">SAVE CHANGES</button>
           </div>
         </div>
       </div>
@@ -211,12 +211,6 @@ function formatDate(dt) {
   font-size: 1rem;
 }
  
-/* Panel */
-.y2k-panel {
-  background: var(--y2k-glass);
-  border: 2px solid rgba(0, 255, 255, 0.25);
-  padding: 1.5rem;
-}
 .panel-heading {
   color: var(--y2k-lime);
   font-family: 'VT323', monospace;
@@ -245,82 +239,4 @@ function formatDate(dt) {
   letter-spacing: 1px;
   margin-top: 0.25rem;
 }
- 
-/* Table */
-.y2k-table {
-  border-collapse: collapse;
-  font-family: 'VT323', monospace;
-  font-size: 1.2rem;
-}
-.y2k-table th {
-  background: rgba(0, 255, 255, 0.1);
-  color: var(--y2k-cyan);
-  padding: 0.6rem 1rem;
-  text-align: left;
-  letter-spacing: 1px;
-  border-bottom: 2px solid rgba(0, 255, 255, 0.3);
-}
-.y2k-table td {
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  color: var(--y2k-text);
-}
-.y2k-table tbody tr:hover {
-  background: rgba(0, 255, 255, 0.05);
-}
- 
-/* Inputs */
-.y2k-label {
-  display: block;
-  color: var(--y2k-cyan);
-  font-size: 0.9rem;
-  letter-spacing: 1px;
-  margin-bottom: 0.3rem;
-}
-.y2k-input {
-  background: rgba(0, 0, 0, 0.4);
-  border: 2px solid var(--y2k-cyan);
-  color: var(--y2k-text);
-  font-family: 'VT323', monospace;
-  font-size: 1.3rem;
-  padding: 0.4rem 0.8rem;
-  outline: none;
-}
-.y2k-input:focus {
-  border-color: var(--y2k-magenta);
-  box-shadow: 0 0 8px var(--y2k-magenta);
-}
- 
-/* Buttons */
-.btn-y2k {
-  background: transparent;
-  border: 2px solid var(--y2k-cyan);
-  color: var(--y2k-cyan);
-  font-family: 'VT323', monospace;
-  font-size: 1.2rem;
-  letter-spacing: 1px;
-  padding: 0.4rem 1.2rem;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: 0.2s;
-}
-.btn-y2k:hover {
-  background: var(--y2k-cyan);
-  color: #000;
-  box-shadow: 0 0 10px var(--y2k-cyan);
-}
-.btn-y2k-lime {
-  border-color: var(--y2k-lime);
-  color: var(--y2k-lime);
-}
-.btn-y2k-lime:hover {
-  background: var(--y2k-lime);
-  color: #000;
-  box-shadow: 0 0 10px var(--y2k-lime);
-}
- 
-/* Glow helpers */
-.glow-text-cyan  { color: var(--y2k-cyan);    text-shadow: 0 0 6px var(--y2k-cyan); }
-.glow-text-lime  { color: var(--y2k-lime);    text-shadow: 0 0 6px var(--y2k-lime); }
-.glow-text-magenta { color: var(--y2k-magenta); text-shadow: 0 0 6px var(--y2k-magenta); }
 </style>

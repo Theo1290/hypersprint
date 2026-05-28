@@ -27,7 +27,7 @@ onMounted(loadHomeData)
 <template>
   <div class="container text-start">
     <div class="text-center mb-5">
-      <h1 class="glow-text-cyan mb-3">HYPER SPRINT</h1>
+      <h1 class="glow-text-cyan mb-3">HYPERSPRINT</h1>
       
       <div v-if="!is_authenticated">
         <p class="mb-4">Test your speed. Climb the ranks. Join the grid.</p>
@@ -50,7 +50,7 @@ onMounted(loadHomeData)
             <div class="y2k-card p-3 d-flex flex-column h-100">
               <h3 class="glow-text-cyan fs-4">{{ c.title }}</h3>
               <p class="mb-3">Lvl: {{ c.level }} | {{ c.topic }} <br>Mode: {{ c.gamemode }}</p>
-              <RouterLink to="/challenge" class="btn y2k-btn mt-auto" style="color:#0f0;border-color:#0f0" :aria-label="'Start ' + c.title">START</RouterLink>
+              <RouterLink to="/challenge" class="y2k-btn mt-auto" :aria-label="'Start ' + c.title">START</RouterLink>
             </div>
           </div>
         </div>
@@ -80,8 +80,5 @@ onMounted(loadHomeData)
 </template>
 
 <style scoped>
-.y2k-btn { border-radius: 0; border-width: 2px; font-weight: bold; }
-.y2k-btn:hover { background: rgba(255,255,255,0.1); }
-.y2k-card { background: var(--y2k-glass); border: 2px solid rgba(0, 255, 255, 0.25); }
-.y2k-stat { background: var(--y2k-glass); border: 2px solid rgba(0, 255, 255, 0.25); padding: 1rem 2rem; }
+/* Redundant styles removed, now using main.css */
 </style>

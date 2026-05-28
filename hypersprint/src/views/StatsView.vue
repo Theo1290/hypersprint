@@ -127,8 +127,6 @@ onMounted(loadStats)
 
 <style scoped>
 .no-round { border-radius: 0 !important; }
-.y2k-card { background: var(--y2k-glass); border: 2px solid var(--y2k-cyan); }
-.y2k-stat { border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.4); }
 .table { background: transparent; }
 .table td, .table th { border-color: rgba(255,255,255,0.1); background: transparent; color: #fff; }
 </style>

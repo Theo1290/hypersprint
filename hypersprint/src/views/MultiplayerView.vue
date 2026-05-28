@@ -116,8 +116,6 @@ onUnmounted(() => {
 }
 
 .y2k-panel {
-  background: var(--y2k-glass);
-  border: 3px solid var(--y2k-cyan);
   width: 100%;
   max-width: 700px;
   box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
@@ -152,8 +150,4 @@ onUnmounted(() => {
   text-shadow: 0 0 10px var(--y2k-magenta);
   letter-spacing: 4px;
 }
-
-.glow-text-cyan { color: var(--y2k-cyan); text-shadow: 0 0 10px var(--y2k-cyan); }
-.glow-text-magenta { color: var(--y2k-magenta); text-shadow: 0 0 10px var(--y2k-magenta); }
-.glow-text-lime { color: var(--y2k-lime); text-shadow: 0 0 10px var(--y2k-lime); }
 </style>

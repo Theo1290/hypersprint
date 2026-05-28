@@ -128,7 +128,7 @@ function formatDate(dt) {
                   <span v-if="friend.highest_wpm" class="ms-2 glow-text-cyan">{{ friend.highest_wpm?.toFixed(1) }} WPM</span>
                 </div>
               </div>
-              <button class="btn-y2k btn-y2k-danger btn-sm-y2k" @click="removeFriend(friend.user_id)">
+              <button class="y2k-btn y2k-btn-magenta y2k-btn-sm" @click="removeFriend(friend.user_id)">
                 REMOVE
               </button>
             </div>
@@ -154,8 +154,8 @@ function formatDate(dt) {
                 <div class="friend-meta">{{ formatDate(req.requested_at) }}</div>
               </div>
               <div class="d-flex gap-2">
-                <button class="btn-y2k btn-y2k-lime btn-sm-y2k" @click="acceptRequest(req.from_user_id)">ACCEPT</button>
-                <button class="btn-y2k btn-y2k-danger btn-sm-y2k" @click="declineRequest(req.from_user_id)">DECLINE</button>
+                <button class="y2k-btn y2k-btn-sm" @click="acceptRequest(req.from_user_id)">ACCEPT</button>
+                <button class="y2k-btn y2k-btn-magenta y2k-btn-sm" @click="declineRequest(req.from_user_id)">DECLINE</button>
               </div>
             </div>
           </div>
@@ -190,7 +190,7 @@ function formatDate(dt) {
             placeholder="SEARCH BY USERNAME..."
             @keyup.enter="searchUsers"
           />
-          <button class="btn-y2k" @click="searchUsers" :disabled="searching">
+          <button class="y2k-btn y2k-btn-cyan" @click="searchUsers" :disabled="searching">
             {{ searching ? 'SEARCHING...' : 'SEARCH' }}
           </button>
         </div>
@@ -215,8 +215,7 @@ function formatDate(dt) {
               <span v-if="player.is_friend" class="friend-badge">FRIEND</span>
               <button
                 v-else
-                class="btn-y2k btn-sm-y2k"
-                :class="player.request_sent ? 'btn-y2k-disabled' : ''"
+                class="y2k-btn y2k-btn-cyan y2k-btn-sm"
                 :disabled="player.request_sent"
                 @click="sendRequest(player.user_id)"
               >
@@ -235,37 +234,7 @@ function formatDate(dt) {
 .friends-page {
   width: 100%;
 }
- 
-/* Tabs */
-.y2k-tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 2px solid rgba(0, 255, 255, 0.3);
-}
-.y2k-tab {
-  background: transparent;
-  border: 2px solid rgba(0, 255, 255, 0.2);
-  border-bottom: none;
-  color: var(--y2k-text);
-  font-family: 'VT323', monospace;
-  font-size: 1.2rem;
-  letter-spacing: 1px;
-  padding: 0.4rem 1.4rem;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: 0.2s;
-  position: relative;
-  top: 2px;
-}
-.y2k-tab:hover {
-  color: var(--y2k-cyan);
-}
-.y2k-tab.active {
-  background: var(--y2k-glass);
-  color: var(--y2k-cyan);
-  border-color: var(--y2k-cyan);
-  border-bottom: 2px solid var(--y2k-bg);
-}
+
 .tab-count {
   display: inline-block;
   background: var(--y2k-cyan);
@@ -324,12 +293,6 @@ function formatDate(dt) {
   object-fit: cover;
 }
  
-/* Panel */
-.y2k-panel {
-  background: var(--y2k-glass);
-  border: 2px solid rgba(0, 255, 255, 0.25);
-  padding: 1.5rem;
-}
 .panel-heading {
   color: var(--y2k-lime);
   font-family: 'VT323', monospace;
@@ -338,76 +301,4 @@ function formatDate(dt) {
   text-shadow: 2px 2px 0 var(--y2k-blue);
   text-transform: uppercase;
 }
- 
-/* Input */
-.y2k-input {
-  background: rgba(0, 0, 0, 0.4);
-  border: 2px solid var(--y2k-cyan);
-  color: var(--y2k-text);
-  font-family: 'VT323', monospace;
-  font-size: 1.3rem;
-  padding: 0.4rem 0.8rem;
-  outline: none;
-}
-.y2k-input:focus {
-  border-color: var(--y2k-magenta);
-  box-shadow: 0 0 8px var(--y2k-magenta);
-}
-.y2k-input::placeholder {
-  color: rgba(209, 179, 255, 0.4);
-}
- 
-/* Buttons */
-.btn-y2k {
-  background: transparent;
-  border: 2px solid var(--y2k-cyan);
-  color: var(--y2k-cyan);
-  font-family: 'VT323', monospace;
-  font-size: 1.2rem;
-  letter-spacing: 1px;
-  padding: 0.4rem 1.2rem;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: 0.2s;
-}
-.btn-y2k:hover:not(:disabled) {
-  background: var(--y2k-cyan);
-  color: #000;
-  box-shadow: 0 0 10px var(--y2k-cyan);
-}
-.btn-y2k:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.btn-sm-y2k {
-  font-size: 1rem;
-  padding: 0.2rem 0.8rem;
-}
-.btn-y2k-lime {
-  border-color: var(--y2k-lime);
-  color: var(--y2k-lime);
-}
-.btn-y2k-lime:hover {
-  background: var(--y2k-lime);
-  color: #000;
-  box-shadow: 0 0 10px var(--y2k-lime);
-}
-.btn-y2k-danger {
-  border-color: var(--y2k-magenta);
-  color: var(--y2k-magenta);
-}
-.btn-y2k-danger:hover {
-  background: var(--y2k-magenta);
-  color: #000;
-  box-shadow: 0 0 10px var(--y2k-magenta);
-}
-.btn-y2k-disabled {
-  border-color: rgba(255,255,255,0.2);
-  color: rgba(255,255,255,0.3);
-}
- 
-/* Glow helpers */
-.glow-text-cyan    { color: var(--y2k-cyan);    text-shadow: 0 0 6px var(--y2k-cyan); }
-.glow-text-lime    { color: var(--y2k-lime);    text-shadow: 0 0 6px var(--y2k-lime); }
-.glow-text-magenta { color: var(--y2k-magenta); text-shadow: 0 0 6px var(--y2k-magenta); }
 </style>
