@@ -72,7 +72,8 @@ const initPusher = () => {
 
   // Listen for opponent progress
   channel.bind('progress-update', (data) => {
-    if (parseInt(data.user_id) !== auth.user.id) {
+    const currentUserId = auth.user ? parseInt(auth.user.id) : null;
+    if (currentUserId && parseInt(data.user_id) !== currentUserId) {
       opponentProgress.value = data.word_index;
       if (data.username && opponentName.value === 'Connecting...') {
         opponentName.value = data.username;
@@ -92,8 +93,9 @@ const initPusher = () => {
   channel.bind('start-race', (data) => {
     console.log('[Race] Start signal received:', data);
     if (data.players) {
+        const currentUserId = auth.user ? parseInt(auth.user.id) : null;
         Object.keys(data.players).forEach(id => {
-            if (parseInt(id) !== auth.user.id) {
+            if (parseInt(id) !== currentUserId) {
                 opponentName.value = data.players[id];
                 console.log('[Race] Opponent identified:', opponentName.value);
             }
@@ -104,7 +106,8 @@ const initPusher = () => {
 
   // Listen for opponent aborting
   channel.bind('opponent-aborted', (data) => {
-      if (parseInt(data.user_id) !== auth.user.id && !isFinished.value) {
+      const currentUserId = auth.user ? parseInt(auth.user.id) : null;
+      if (currentUserId && parseInt(data.user_id) !== currentUserId && !isFinished.value) {
           raceResult.value = 'win';
           error.value = `${data.username} has aborted the mission. You win by default!`;
           finishRace(true);
@@ -207,7 +210,7 @@ const finishRace = (isWinner = false) => {
 
 const abortRace = async () => {
     if (isFinished.value) {
-        router.push('/multiplayer');
+        router.push('/challenge');
         return;
     }
     
@@ -219,7 +222,7 @@ const abortRace = async () => {
     } catch (err) {
         console.error('Abort failed:', err);
     }
-    router.push('/multiplayer');
+    router.push('/challenge');
 };
 
 onMounted(() => {
@@ -272,7 +275,7 @@ watch(currentWordIndex, () => {
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="glow-text-cyan m-0">1v1 BATTLEGRID</h1>
         <div class="d-flex gap-3 align-items-center">
-            <button @click="abortRace" class="btn btn-outline-danger btn-sm font-pixel">ABORT MISSION</button>
+            <button @click="abortRace" class="btn btn-outline-danger p-2 fs-5 rounded-0">ABORT MISSION</button>
             <div class="badge border border-magenta text-magenta p-2 fs-5">SYNCED RACE</div>
         </div>
     </div>
