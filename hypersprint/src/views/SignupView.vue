@@ -128,7 +128,7 @@ const handleSubmit = async (e) => {
           <!-- Submission button -->
           <button 
             type="submit" 
-            class="btn y2k-btn btn-primary mt-3 @click=verifyCaptcha"
+            class="y2k-btn w-80 mt-3" 
             :disabled="loading"
           >
             {{ loading ? 'AUTHENTICATING...' : 'REGISTER' }}
@@ -140,10 +140,7 @@ const handleSubmit = async (e) => {
 </template>
 
 <style scoped>
-.y2k-btn { border-radius: 0; border-width: 2px; font-weight: bold; }
-.y2k-btn:hover { background: rgba(255,255,255,0.1); }
-.y2k-btn.btn-primary { width: 80%; }
-.y2k-card { background: var(--y2k-glass); border: 2px solid var(--y2k-cyan); }
-.y2k-stat { background: var(--y2k-glass); border: 1px solid var(--y2k-magenta); padding: 1rem 2rem; }
-.y2k-note { background: var(--y2k-glass); line-height: 1.5rem; font-size: medium; }
+.w-80 {
+  width: 80%;
+}
 </style>

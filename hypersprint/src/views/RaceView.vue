@@ -72,7 +72,8 @@ const initPusher = () => {
 
   // Listen for opponent progress
   channel.bind('progress-update', (data) => {
-    if (parseInt(data.user_id) !== auth.user.id) {
+    const currentUserId = auth.user ? parseInt(auth.user.id) : null;
+    if (currentUserId && parseInt(data.user_id) !== currentUserId) {
       opponentProgress.value = data.word_index;
       if (data.username && opponentName.value === 'Connecting...') {
         opponentName.value = data.username;
@@ -92,8 +93,9 @@ const initPusher = () => {
   channel.bind('start-race', (data) => {
     console.log('[Race] Start signal received:', data);
     if (data.players) {
+        const currentUserId = auth.user ? parseInt(auth.user.id) : null;
         Object.keys(data.players).forEach(id => {
-            if (parseInt(id) !== auth.user.id) {
+            if (parseInt(id) !== currentUserId) {
                 opponentName.value = data.players[id];
                 console.log('[Race] Opponent identified:', opponentName.value);
             }
@@ -104,7 +106,8 @@ const initPusher = () => {
 
   // Listen for opponent aborting
   channel.bind('opponent-aborted', (data) => {
-      if (parseInt(data.user_id) !== auth.user.id && !isFinished.value) {
+      const currentUserId = auth.user ? parseInt(auth.user.id) : null;
+      if (currentUserId && parseInt(data.user_id) !== currentUserId && !isFinished.value) {
           raceResult.value = 'win';
           error.value = `${data.username} has aborted the mission. You win by default!`;
           finishRace(true);
@@ -207,7 +210,7 @@ const finishRace = (isWinner = false) => {
 
 const abortRace = async () => {
     if (isFinished.value) {
-        router.push('/multiplayer');
+        router.push('/challenge');
         return;
     }
     
@@ -219,7 +222,7 @@ const abortRace = async () => {
     } catch (err) {
         console.error('Abort failed:', err);
     }
-    router.push('/multiplayer');
+    router.push('/challenge');
 };
 
 onMounted(() => {
@@ -272,7 +275,7 @@ watch(currentWordIndex, () => {
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="glow-text-cyan m-0">1v1 BATTLEGRID</h1>
         <div class="d-flex gap-3 align-items-center">
-            <button @click="abortRace" class="btn btn-outline-danger btn-sm font-pixel">ABORT MISSION</button>
+            <button @click="abortRace" class="btn btn-outline-danger p-2 fs-5 rounded-0">ABORT MISSION</button>
             <div class="badge border border-magenta text-magenta p-2 fs-5">SYNCED RACE</div>
         </div>
     </div>
@@ -363,203 +366,15 @@ watch(currentWordIndex, () => {
             </div>
 
             <div class="d-flex flex-column gap-3">
-                <button @click="router.push('/multiplayer')" class="btn-y2k btn-cyan-glow">NEW CHALLENGE</button>
-                <button @click="router.push('/')" class="btn-y2k btn-magenta-glow">RETURN TO HUB</button>
-            </div>
-        </div>
+                <button @click="router.push('/multiplayer')" class="y2k-btn y2k-btn-cyan">NEW CHALLENGE</button>
+                <button @click="router.push('/')" class="y2k-btn y2k-btn-magenta">RETURN TO HUB</button>
+            </div>        </div>
     </div>
   </div>
 </div>
 </template>
 
+
 <style scoped>
-.race-wrapper { min-height: 90vh; font-family: 'VT323', monospace; }
-.border-main { border: 2px solid rgba(0, 255, 255, 0.25); }
-
-.track-container { background: rgba(0,0,0,0.5); position: relative; }
-
-.progress-track {
-    height: 12px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 6px;
-    position: relative;
-    overflow: visible;
-}
-
-.progress-bar-cyan {
-    height: 100%;
-    background: var(--y2k-cyan);
-    box-shadow: 0 0 15px var(--y2k-cyan);
-    transition: width 0.3s ease;
-    position: relative;
-}
-
-.progress-bar-magenta {
-    height: 100%;
-    background: var(--y2k-magenta);
-    box-shadow: 0 0 15px var(--y2k-magenta);
-    transition: width 0.3s ease;
-    position: relative;
-}
-
-.car-head {
-    position: absolute;
-    right: -5px;
-    top: -10px;
-    width: 20px;
-    height: 32px;
-    background: white;
-    border: 2px solid black;
-    box-shadow: 0 0 10px white;
-}
-
-.countdown-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.countdown-text {
-    font-size: 15rem;
-    color: var(--y2k-lime);
-    text-shadow: 0 0 30px var(--y2k-lime);
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-/* Unified Battlegrid Style */
-.typing-display-grid { 
-  position: relative;
-  height: 300px;
-  line-height: 1.8; 
-  white-space: pre-wrap; 
-  word-break: break-all; 
-  scroll-behavior: smooth;
-  font-family: 'VT323', monospace !important;
-  font-size: 2rem !important;
-  color: rgba(255, 255, 255, 0.4);
-  overflow: auto;
-}
-
-.stealth-input {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  opacity: 0;
-  z-index: 2;
-  cursor: text;
-  resize: none;
-  border: none;
-  outline: none;
-}
-
-.text-layer {
-  position: relative;
-  z-index: 1;
-}
-
-.char-span { position: relative; }
-
-/* The Live Cursor in Display Area */
-.is-current::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 10%;
-  width: 2px;
-  height: 80%;
-  background-color: var(--y2k-cyan);
-  animation: blink 1s infinite;
-  box-shadow: 0 0 8px var(--y2k-cyan);
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.bg-dark-glass { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); }
-
-.word-wrapper { display: inline-block; }
-.word-span { display: inline-block; padding: 0 4px; position: relative; }
-.char-span { position: relative; }
-.space { position: relative; display: inline-block; width: 0.5em; }
-
-.current-word { border-bottom: 2px solid rgba(13, 110, 253, 0.3); }
-
-.text-success { 
-  color: #00ff88 !important; 
-  text-shadow: 0 0 5px #00ff88;
-  opacity: 1;
-}
-.text-danger-char { 
-  color: #ff3366 !important; 
-  background: rgba(255, 51, 102, 0.2);
-  opacity: 1;
-}
-
-.glow-text-cyan { color: var(--y2k-cyan); text-shadow: 0 0 8px var(--y2k-cyan); }
-.glow-text-magenta { color: var(--y2k-magenta); text-shadow: 0 0 8px var(--y2k-magenta); }
-.glow-text-lime { color: var(--y2k-lime); text-shadow: 0 0 8px var(--y2k-lime); }
-
-/* Result Modal */
-.result-modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-}
-
-.result-card {
-    background: var(--y2k-glass);
-    border: 3px solid var(--y2k-cyan);
-    max-width: 600px;
-    width: 90%;
-    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
-}
-
-.btn-y2k {
-    font-family: 'VT323', monospace;
-    font-size: 1.8rem;
-    padding: 10px 25px;
-    border: 3px solid transparent;
-    cursor: pointer;
-    transition: 0.3s;
-    text-transform: uppercase;
-}
-
-.btn-cyan-glow {
-    background: var(--y2k-cyan);
-    color: black;
-}
-
-.btn-cyan-glow:hover {
-    box-shadow: 0 0 20px var(--y2k-cyan);
-    transform: scale(1.05);
-}
-
-.btn-magenta-glow {
-    background: transparent;
-    border-color: var(--y2k-magenta);
-    color: var(--y2k-magenta);
-}
-
-.btn-magenta-glow:hover {
-    background: var(--y2k-magenta);
-    color: white;
-    box-shadow: 0 0 20px var(--y2k-magenta);
-}
-
-.font-pixel { font-family: 'VT323', monospace; }
+/* Local styles moved to main.css */
 </style>

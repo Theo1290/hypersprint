@@ -38,7 +38,7 @@ onMounted(async () => {
     <header class="y2k-container mb-4">
       <nav class="navbar navbar-expand-lg navbar-dark y2k-nav px-4">
         <div class="container-fluid px-0">
-          <RouterLink class="navbar-brand y2k-logo" to="/">HYPER SPRINT</RouterLink>
+          <RouterLink class="navbar-brand y2k-logo" to="/">HYPERSPRINT</RouterLink>
           <button
             class="navbar-toggler"
             type="button"
@@ -123,109 +123,5 @@ onMounted(async () => {
 </template>
 
 <style>
-.app-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.y2k-container {
-  width: 100%;
-  margin-right: auto;
-  margin-left: auto;
-  padding-right: 1.5rem;
-  padding-left: 1.5rem;
-}
-
-@media (min-width: 1200px) {
-  .y2k-container {
-    max-width: 85vw;
-  }
-}
-
-.y2k-nav {
-  background: var(--y2k-bg);
-  border: 2px solid rgba(0, 255, 255, 0.25);
-  z-index: 1000;
-  border-radius: 0 !important;
-}
-
-.y2k-logo {
-  font-weight: 900;
-  font-size: 2.2rem !important; /* Increased Size */
-  color: var(--y2k-cyan) !important;
-  letter-spacing: 3px;
-  text-shadow: 3px 3px 0px var(--y2k-magenta);
-}
-
-.nav-link {
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-size: 1.4rem !important; /* Increased Size */
-}
-
-.nav-link:hover {
-  color: var(--y2k-magenta) !important;
-  text-shadow: 0 0 10px var(--y2k-magenta);
-}
-
-.y2k-user-icon {
-  font-size: 2rem !important;
-  vertical-align: middle;
-}
-
-.y2k-dropdown {
-  background: var(--y2k-bg);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0 !important;
-}
-
-.dropdown-item {
-  font-family: 'VT323', monospace;
-  font-size: 1.2rem;
-}
-
-.dropdown-item:hover {
-  background: var(--y2k-cyan);
-  color: #000;
-}
-
-.y2k-page-wrapper {
-  background: var(--y2k-bg);
-  width: 100%;
-  min-height: 60vh;
-  padding: 3rem;
-  border: 2px solid rgba(0, 255, 255, 0.25);
-  border-radius: 0 !important;
-}
-
-.y2k-footer {
-  background: var(--y2k-bg);
-  border: 2px solid rgba(0, 255, 255, 0.25);
-  z-index: 1000;
-  position: relative;
-  border-radius: 0 !important;
-}
-
-.y2k-footer-text {
-  font-weight: bold;
-  letter-spacing: 2px;
-  font-size: 1rem;
-}
-
-.glow-text-magenta {
-  color: var(--y2k-magenta);
-  text-shadow: 0 0 5px var(--y2k-magenta);
-}
-
-.glow-text-cyan {
-  color: var(--y2k-cyan);
-  text-shadow: 0 0 5px var(--y2k-cyan);
-}
-
-.glow-text-lime {
-  color: var(--y2k-lime);
-  text-shadow: 0 0 5px var(--y2k-lime);
-}
+/* App-wide base layout styles moved to main.css */
 </style>

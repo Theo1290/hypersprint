@@ -265,12 +265,12 @@ const getRenderedChars = (wIdx) => {
 
       <div class="d-flex gap-3">
         <div class="btn-group no-round">
-          <button v-for="m in ['time', 'words']" :key="m" @click="setMode(m)" :class="['btn-y2k no-round', selectedMode === m ? 'active-mode' : '']">
+          <button v-for="m in ['time', 'words']" :key="m" @click="setMode(m)" :class="['y2k-btn y2k-btn-cyan no-round', selectedMode === m ? 'active-mode' : '']">
             {{ m.toUpperCase() }}
           </button>
         </div>
         <div class="btn-group no-round">
-          <button v-for="v in modes[selectedMode]" :key="v" @click="setValue(v)" :class="['btn-y2k no-round', selectedValue === v ? 'active-mode-alt' : '']">
+          <button v-for="v in modes[selectedMode]" :key="v" @click="setValue(v)" :class="['y2k-btn y2k-btn-magenta no-round', selectedValue === v ? 'active-mode-alt' : '']">
             {{ v }}
           </button>
         </div>
@@ -319,7 +319,7 @@ const getRenderedChars = (wIdx) => {
 
         <!-- Completion Stats -->
         <div v-if="isFinished" class="alert alert-success mt-auto bg-success text-white border-0 no-round shadow-sm">
-          <h4 class="alert-heading fw-bold">Sprint Finished!</h4>
+          <h4 class="alert-heading fw-bold">SPRINT FINISHED</h4>
           <div class="row text-center mt-3">
             <div class="col">
               <div class="h3 mb-0 fw-bold">{{ results.wpm }}</div>
@@ -370,251 +370,7 @@ const getRenderedChars = (wIdx) => {
     </div>
   </div>
 </template>
+
 <style scoped>
-.no-round { border-radius: 0 !important; }
-
-.bg-purple { background-color: var(--y2k-bg) !important; }
-.bg-black { background-color: #000 !important; }
-.bg-grey { background-color: #2a2a2a !important; }
-
-/* Main consistent border color */
-.border-main { border: 2px solid rgba(0, 255, 255, 0.25) !important; }
-.border-main-thin { border: 1px solid rgba(0, 255, 255, 0.25) !important; }
-
-.font-pixel {
-  font-family: 'VT323', monospace !important;
-  font-size: 2.5rem !important;
-}
-
-.track-container { background: rgba(0,0,0,0.5); position: relative; }
-
-.progress-track {
-    height: 12px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 6px;
-    position: relative;
-    overflow: visible;
-}
-
-.progress-bar-cyan {
-    height: 100%;
-    background: var(--y2k-cyan);
-    box-shadow: 0 0 15px var(--y2k-cyan);
-    transition: width 0.3s ease;
-    position: relative;
-}
-
-.car-head {
-    position: absolute;
-    right: -5px;
-    top: -10px;
-    width: 20px;
-    height: 32px;
-    background: white;
-    border: 2px solid black;
-    box-shadow: 0 0 10px white;
-}
-
-/* Unified Battlegrid Style */
-.typing-display-grid { 
-  position: relative;
-  height: 300px;
-  line-height: 1.8; 
-  white-space: pre-wrap; 
-  word-break: break-all; 
-  scroll-behavior: smooth;
-  font-family: 'VT323', monospace !important;
-  font-size: 2rem !important;
-  color: rgba(255, 255, 255, 0.4);
-  overflow: auto;
-}
-
-.stealth-input {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  opacity: 0;
-  z-index: 2;
-  cursor: text;
-  resize: none;
-  border: none;
-  outline: none;
-}
-
-.text-layer {
-  position: relative;
-  z-index: 1;
-}
-
-.race-input-styled {
-    width: 100%;
-    height: 120px;
-    background: rgba(0,0,0,0.4);
-    border: 2px solid var(--y2k-cyan);
-    color: white;
-    font-family: 'VT323', monospace !important;
-    font-size: 2rem !important;
-    resize: none;
-    outline: none;
-    transition: 0.3s;
-}
-
-.race-input-styled:focus {
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-    border-color: var(--y2k-cyan);
-}
-
-.char-span { position: relative; }
-
-/* The Live Cursor in Display Area */
-.is-current::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 10%;
-  width: 2px;
-  height: 80%;
-  background-color: var(--y2k-cyan);
-  animation: blink 1s infinite;
-  box-shadow: 0 0 8px var(--y2k-cyan);
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.bg-dark-glass { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); }
-
-.word-wrapper { display: inline-block; }
-.word-span { display: inline-block; padding: 0 4px; position: relative; }
-.char-span { position: relative; }
-.space { position: relative; display: inline-block; width: 0.5em; }
-
-/* The Cursor */
-.is-current::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 10%;
-  width: 2px;
-  height: 80%;
-  background-color: var(--y2k-cyan);
-  animation: blink 1s infinite;
-  box-shadow: 0 0 8px var(--y2k-cyan);
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.current-word { border-bottom: 2px solid rgba(13, 110, 253, 0.3); }
-
-.text-success { 
-  color: #00ff88 !important; 
-  text-shadow: 0 0 5px #00ff88;
-  opacity: 1;
-}
-.text-danger { 
-  color: #ff3366 !important; 
-  text-decoration: line-through;
-  opacity: 1;
-}
-.text-danger-char { 
-  color: #ff3366 !important; 
-  background: rgba(255, 51, 102, 0.2);
-  opacity: 1;
-}
-
-.list-group-item:hover { background: rgba(0, 255, 255, 0.05) !important; }
-
-.btn-pixel-font {
-  font-family: 'VT323', monospace !important;
-  font-weight: bold;
-  letter-spacing: 1px;
-  font-size: 1.4rem !important;
-}
-
-.btn-y2k {
-  background: transparent;
-  border: 2px solid var(--y2k-cyan);
-  color: var(--y2k-cyan);
-  font-family: 'VT323', monospace;
-  font-size: 1.5rem;
-  letter-spacing: 2px;
-  padding: 0.4rem 1.2rem;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: 0.2s;
-}
-
-.btn-y2k:hover {
-  background: var(--y2k-cyan);
-  color: #000;
-  box-shadow: 0 0 10px var(--y2k-cyan);
-}
-
-.active-mode {
-  background: var(--y2k-cyan);
-  color: #000;
-  box-shadow: 0 0 10px var(--y2k-cyan);
-}
-
-.active-mode-alt {
-  border-color: var(--y2k-magenta);
-  background: var(--y2k-magenta);
-  color: #000;
-  box-shadow: 0 0 10px var(--y2k-magenta);
-}
-
-.restart-btn {
-  transition: transform 0.2s ease-in-out;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.restart-btn:hover {
-  transform: rotate(90deg);
-  color: white;
-  background: transparent !important;
-}
-
-.transition-all {
-  transition: all 0.3s ease-in-out;
-}
-
-.y2k-sidebar-card {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 0;
-  min-height: 300px;
-}
-
-.y2k-sidebar-card .card-header {
-  letter-spacing: 1px;
-  font-size: 0.8rem;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.collapsed-sidebar {
-  opacity: 0.7;
-}
-
-.collapsed-sidebar:hover {
-  opacity: 1;
-  background: rgba(0, 255, 255, 0.05);
-}
-
-.vertical-text {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  transform: rotate(180deg);
-  letter-spacing: 4px;
-}
-
-/* Custom scrollbar */
-.custom-scrollbar::-webkit-scrollbar { width: 8px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: #000; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border: 1px solid #555; }
+/* Local styles moved to main.css */
 </style>
