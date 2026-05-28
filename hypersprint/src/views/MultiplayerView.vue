@@ -111,43 +111,5 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.lobby-container {
-  min-height: 80vh;
-}
-
-.y2k-panel {
-  width: 100%;
-  max-width: 700px;
-  box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
-}
-
-.fs-huge { font-size: 5rem; }
-
-.radar-ping {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 4px solid var(--y2k-lime);
-  margin: 0 auto;
-  animation: ping 1.5s infinite ease-out;
-}
-
-@keyframes ping {
-  0% { transform: scale(0.5); opacity: 1; }
-  100% { transform: scale(2); opacity: 0; }
-}
-
-.btn-cancel {
-  color: var(--y2k-magenta);
-  text-decoration: none;
-  font-family: 'VT323', monospace;
-  font-size: 1.5rem;
-  letter-spacing: 2px;
-  transition: 0.3s;
-}
-
-.btn-cancel:hover {
-  text-shadow: 0 0 10px var(--y2k-magenta);
-  letter-spacing: 4px;
-}
+/* Local styles moved to main.css */
 </style>
