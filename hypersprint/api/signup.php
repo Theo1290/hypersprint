@@ -60,6 +60,7 @@ try {
     $user_id = $pdo->lastInsertId();
 
     $_SESSION['user_id'] = (int)$user_id;
+    $_SESSION['username'] = $username;
 
     send_json([
         'success' => true,

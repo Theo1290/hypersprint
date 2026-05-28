@@ -36,6 +36,7 @@ try {
     }
 
     $_SESSION['user_id'] = (int)$user['id'];
+    $_SESSION['username'] = $user['username'];
 
     send_json([
         'success' => true,
