@@ -78,6 +78,13 @@ try {
                 'user_id_used' => $user_id
             ]);
         }
+    } elseif ($action === 'leave') {
+        $race_uuid = isset($data['race_uuid']) ? $data['race_uuid'] : '';
+        if ($race_uuid) {
+            $stmt = $pdo->prepare("DELETE FROM active_races WHERE race_uuid = ? AND user1_id = ? AND status = 'waiting'");
+            $stmt->execute([$race_uuid, $user_id]);
+        }
+        send_json(['success' => true]);
     }
 } catch (PDOException $e) {
     send_json(['error' => 'Lobby error: ' . $e->getMessage()], 500);

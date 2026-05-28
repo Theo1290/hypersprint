@@ -23,6 +23,12 @@ const error = ref('');
 const opponentProgress = ref(0); // Index of word opponent is on
 const opponentName = ref('Connecting...');
 const opponentFinished = ref(false);
+const raceResult = ref(null); // 'win' or 'lose'
+const showResultModal = ref(false);
+
+// Refs for scrolling and focus
+const typingAreaRef = ref(null);
+const hiddenInputRef = ref(null);
 
 // Pusher
 let pusher = null;
@@ -32,6 +38,10 @@ let channel = null;
 const wordArray = computed(() => challenge.value ? challenge.value.content_to_type.split(' ') : []);
 const typedWords = computed(() => userInput.value.split(' '));
 const currentWordIndex = computed(() => typedWords.value.length - 1);
+const currentCharIndex = computed(() => {
+  const currentTyped = typedWords.value[currentWordIndex.value];
+  return currentTyped ? currentTyped.length : 0;
+});
 
 const myProgressPercent = computed(() => {
   if (wordArray.value.length === 0) return 0;
@@ -67,7 +77,14 @@ const initPusher = () => {
       if (data.username && opponentName.value === 'Connecting...') {
         opponentName.value = data.username;
       }
-      if (data.finished) opponentFinished.value = true;
+      if (data.finished) {
+          opponentFinished.value = true;
+          // If we haven't finished yet, the opponent won
+          if (!isFinished.value) {
+              raceResult.value = 'lose';
+              finishRace(false);
+          }
+      }
     }
   });
 
@@ -83,6 +100,15 @@ const initPusher = () => {
         });
     }
     startCountdown();
+  });
+
+  // Listen for opponent aborting
+  channel.bind('opponent-aborted', (data) => {
+      if (parseInt(data.user_id) !== auth.user.id && !isFinished.value) {
+          raceResult.value = 'win';
+          error.value = `${data.username} has aborted the mission. You win by default!`;
+          finishRace(true);
+      }
   });
 
   // Broadcast that we are ready
@@ -101,22 +127,54 @@ const startCountdown = () => {
       countdown.value = 'GO!';
       raceStarted.value = true;
       startTime.value = Date.now();
-      setTimeout(() => { countdown.value = null; }, 1000);
+      setTimeout(() => { 
+          countdown.value = null; 
+          nextTick(() => hiddenInputRef.value?.focus());
+      }, 1000);
     }
   }, 1000);
+};
+
+const handleGlobalKeydown = (e) => {
+  if (isFinished.value || !raceStarted.value) return;
+  if (e.key.length === 1 || e.key === 'Backspace') {
+    hiddenInputRef.value?.focus();
+  }
+};
+
+const focusInput = () => {
+  hiddenInputRef.value?.focus();
+};
+
+const isCurrentChar = (wIdx, cIdx) => {
+  return wIdx === currentWordIndex.value && cIdx === currentCharIndex.value;
 };
 
 const handleInput = () => {
   if (!raceStarted.value || isFinished.value) return;
 
-  // Send progress to opponent every word
+  const currentIdx = currentWordIndex.value;
+  const targetWord = wordArray.value[currentIdx];
+  const typedWord = typedWords.value[currentIdx];
+
+  // 1. Validation for moving to next word (space pressed)
   if (userInput.value.endsWith(' ')) {
-    broadcastProgress(false);
+    const completedIdx = currentIdx - 1;
+    if (completedIdx >= 0) {
+      const completedWord = typedWords.value[completedIdx];
+      const expectedWord = wordArray.value[completedIdx];
+      
+      if (completedWord !== expectedWord) {
+        userInput.value = userInput.value.slice(0, -1);
+        return;
+      }
+      broadcastProgress(false);
+    }
   }
 
-  // Check completion
-  if (typedWords.value.length >= wordArray.value.length) {
-      finishRace();
+  // 2. Completion Check
+  if (currentIdx === wordArray.value.length - 1 && typedWord === targetWord) {
+    finishRace(true);
   }
 };
 
@@ -130,15 +188,55 @@ const broadcastProgress = (finished) => {
   });
 };
 
-const finishRace = () => {
+const finishRace = (isWinner = false) => {
+  if (isFinished.value) return;
   isFinished.value = true;
+  
+  if (isWinner && !raceResult.value) {
+    raceResult.value = 'win';
+  } else if (!isWinner && !raceResult.value) {
+    raceResult.value = 'lose';
+  }
+
   broadcastProgress(true);
+  
+  setTimeout(() => {
+    showResultModal.value = true;
+  }, 800);
 };
 
-onMounted(fetchRaceData);
+const abortRace = async () => {
+    if (isFinished.value) {
+        router.push('/multiplayer');
+        return;
+    }
+    
+    try {
+        await callApi('/api/race_sync.php', 'POST', {
+            action: 'abort',
+            race_uuid: raceUuid
+        });
+    } catch (err) {
+        console.error('Abort failed:', err);
+    }
+    router.push('/multiplayer');
+};
+
+onMounted(() => {
+    fetchRaceData();
+    window.addEventListener('keydown', handleGlobalKeydown);
+});
+
 onUnmounted(() => {
+  if (!isFinished.value && raceStarted.value) {
+      callApi('/api/race_sync.php', 'POST', {
+          action: 'abort',
+          race_uuid: raceUuid
+      });
+  }
   if (channel) channel.unbind_all();
   if (pusher) pusher.disconnect();
+  window.removeEventListener('keydown', handleGlobalKeydown);
 });
 
 const getCharClass = (wordIndex, charIndex) => {
@@ -153,6 +251,18 @@ const getWordClass = (index) => {
   if (index < currentWordIndex.value) return 'text-muted';
   return index === currentWordIndex.value ? 'current-word' : '';
 };
+
+// Auto-scroll logic
+watch(currentWordIndex, () => {
+  nextTick(() => {
+    if (typingAreaRef.value) {
+      const currentWordEl = typingAreaRef.value.querySelector('.current-word');
+      if (currentWordEl) {
+        currentWordEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  });
+});
 </script>
 
 <template>
@@ -161,7 +271,10 @@ const getWordClass = (index) => {
     <!-- Header: Match Info -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="glow-text-cyan m-0">1v1 BATTLEGRID</h1>
-        <div class="badge border border-magenta text-magenta p-2 fs-5">SYNCED RACE</div>
+        <div class="d-flex gap-3 align-items-center">
+            <button @click="abortRace" class="btn btn-outline-danger btn-sm font-pixel">ABORT MISSION</button>
+            <div class="badge border border-magenta text-magenta p-2 fs-5">SYNCED RACE</div>
+        </div>
     </div>
 
     <!-- The Track -->
@@ -170,7 +283,8 @@ const getWordClass = (index) => {
         <div class="racer-row mb-4">
             <div class="d-flex justify-content-between mb-2">
                 <span class="glow-text-cyan fw-bold">YOU ({{ auth.user?.username }})</span>
-                <span v-if="isFinished" class="badge bg-success">FINISHED</span>
+                <span v-if="isFinished && raceResult === 'win'" class="badge bg-success">WINNER</span>
+                <span v-else-if="isFinished" class="badge bg-secondary">FINISHED</span>
             </div>
             <div class="progress-track">
                 <div class="progress-bar-cyan" :style="{ width: myProgressPercent + '%' }">
@@ -183,7 +297,8 @@ const getWordClass = (index) => {
         <div class="racer-row">
             <div class="d-flex justify-content-between mb-2">
                 <span class="glow-text-magenta fw-bold">{{ opponentName }}</span>
-                <span v-if="opponentFinished" class="badge bg-danger">FINISHED</span>
+                <span v-if="opponentFinished && raceResult === 'lose'" class="badge bg-danger">WINNER</span>
+                <span v-else-if="opponentFinished" class="badge bg-secondary">FINISHED</span>
             </div>
             <div class="progress-track">
                 <div class="progress-bar-magenta" :style="{ width: opponentProgressPercent + '%' }">
@@ -200,31 +315,66 @@ const getWordClass = (index) => {
 
     <!-- Typing Grid -->
     <div v-if="challenge" class="typing-grid flex-grow-1 d-flex flex-column">
-        <div class="typing-area p-4 bg-dark-glass mb-4 fs-3">
-            <span v-for="(word, wIdx) in wordArray" :key="wIdx" :class="['word-span', getWordClass(wIdx)]">
-                <span v-for="(char, cIdx) in word" :key="cIdx" :class="getCharClass(wIdx, cIdx)">{{ char }}</span>
-                <span class="space">&nbsp;</span>
-            </span>
-        </div>
-
-        <textarea
+        <div 
+          ref="typingAreaRef" 
+          @click="focusInput"
+          class="typing-display-grid p-4 bg-dark-glass border-main mb-4 cursor-text"
+        >
+          <!-- Stealth Input -->
+          <textarea
+            ref="hiddenInputRef"
             v-model="userInput"
             @input="handleInput"
             :disabled="!raceStarted || isFinished"
-            class="race-input p-3"
-            placeholder="Wait for signal..."
+            class="stealth-input"
+            spellcheck="false"
             autofocus
-        ></textarea>
+          ></textarea>
+
+          <div class="text-layer">
+            <span class="word-wrapper" v-for="(word, wIdx) in wordArray" :key="wIdx">
+              <span :class="['word-span', getWordClass(wIdx)]">
+                <span v-for="(char, cIdx) in word" :key="cIdx" :class="['char-span', getCharClass(wIdx, cIdx), { 'is-current': isCurrentChar(wIdx, cIdx) }]">
+                  {{ char }}
+                </span>
+              </span>
+              <span :class="['space', { 'is-current': isCurrentChar(wIdx, word.length) }]">&nbsp;</span>
+            </span>
+          </div>
+        </div>
     </div>
 
-    <div v-if="error" class="alert alert-danger mt-4">{{ error }}</div>
+    <div v-if="error" class="alert alert-warning mt-4 font-pixel fs-4">{{ error }}</div>
+
+    <!-- Result Modal Overlay -->
+    <div v-if="showResultModal" class="result-modal-overlay">
+        <div class="result-card p-5 text-center">
+            <h1 :class="raceResult === 'win' ? 'glow-text-lime' : 'glow-text-magenta'" class="mb-4 display-3">
+                {{ raceResult === 'win' ? 'VICTORY' : 'DEFEAT' }}
+            </h1>
+            
+            <div class="result-body fs-4 mb-5">
+                <p v-if="raceResult === 'win'" class="text-white">
+                    You dominated the battlegrid! The opponent was left in your wake.
+                </p>
+                <p v-else class="text-white">
+                    The opponent reached the finish line first. Your pulse was too slow.
+                </p>
+            </div>
+
+            <div class="d-flex flex-column gap-3">
+                <button @click="router.push('/multiplayer')" class="btn-y2k btn-cyan-glow">NEW CHALLENGE</button>
+                <button @click="router.push('/')" class="btn-y2k btn-magenta-glow">RETURN TO HUB</button>
+            </div>
+        </div>
+    </div>
   </div>
 </div>
 </template>
 
 <style scoped>
 .race-wrapper { min-height: 90vh; font-family: 'VT323', monospace; }
-.border-main { border: 3px solid rgba(255, 255, 255, 0.2); }
+.border-main { border: 2px solid rgba(0, 255, 255, 0.25); }
 
 .track-container { background: rgba(0,0,0,0.5); position: relative; }
 
@@ -286,26 +436,130 @@ const getWordClass = (index) => {
     100% { transform: scale(1); }
 }
 
-.bg-dark-glass { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); color: #aaa; }
-.word-span { display: inline-block; margin-right: 8px; }
-.current-word { background: rgba(0, 255, 255, 0.2); color: white; border-bottom: 2px solid var(--y2k-cyan); }
-.text-success { color: var(--y2k-lime) !important; }
-.text-danger-char { color: #ff3366 !important; background: rgba(255, 51, 102, 0.2); }
-
-.race-input {
-    width: 100%;
-    height: 100px;
-    background: #111;
-    border: 2px solid var(--y2k-cyan);
-    color: white;
-    font-size: 1.5rem;
-    resize: none;
-    outline: none;
+/* Unified Battlegrid Style */
+.typing-display-grid { 
+  position: relative;
+  height: 300px;
+  line-height: 1.8; 
+  white-space: pre-wrap; 
+  word-break: break-all; 
+  scroll-behavior: smooth;
+  font-family: 'VT323', monospace !important;
+  font-size: 2rem !important;
+  color: rgba(255, 255, 255, 0.4);
+  overflow: auto;
 }
 
-.race-input:focus { box-shadow: 0 0 15px var(--y2k-cyan); }
+.stealth-input {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0;
+  z-index: 2;
+  cursor: text;
+  resize: none;
+  border: none;
+  outline: none;
+}
+
+.text-layer {
+  position: relative;
+  z-index: 1;
+}
+
+.char-span { position: relative; }
+
+/* The Live Cursor in Display Area */
+.is-current::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 10%;
+  width: 2px;
+  height: 80%;
+  background-color: var(--y2k-cyan);
+  animation: blink 1s infinite;
+  box-shadow: 0 0 8px var(--y2k-cyan);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.bg-dark-glass { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); }
+
+.word-wrapper { display: inline-block; }
+.word-span { display: inline-block; padding: 0 4px; position: relative; }
+.char-span { position: relative; }
+.space { position: relative; display: inline-block; width: 0.5em; }
+
+.current-word { border-bottom: 2px solid rgba(13, 110, 253, 0.3); }
+
+.text-success { 
+  color: #00ff88 !important; 
+  text-shadow: 0 0 5px #00ff88;
+  opacity: 1;
+}
+.text-danger-char { 
+  color: #ff3366 !important; 
+  background: rgba(255, 51, 102, 0.2);
+  opacity: 1;
+}
 
 .glow-text-cyan { color: var(--y2k-cyan); text-shadow: 0 0 8px var(--y2k-cyan); }
 .glow-text-magenta { color: var(--y2k-magenta); text-shadow: 0 0 8px var(--y2k-magenta); }
 .glow-text-lime { color: var(--y2k-lime); text-shadow: 0 0 8px var(--y2k-lime); }
+
+/* Result Modal */
+.result-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.result-card {
+    background: var(--y2k-glass);
+    border: 3px solid var(--y2k-cyan);
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+}
+
+.btn-y2k {
+    font-family: 'VT323', monospace;
+    font-size: 1.8rem;
+    padding: 10px 25px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+}
+
+.btn-cyan-glow {
+    background: var(--y2k-cyan);
+    color: black;
+}
+
+.btn-cyan-glow:hover {
+    box-shadow: 0 0 20px var(--y2k-cyan);
+    transform: scale(1.05);
+}
+
+.btn-magenta-glow {
+    background: transparent;
+    border-color: var(--y2k-magenta);
+    color: var(--y2k-magenta);
+}
+
+.btn-magenta-glow:hover {
+    background: var(--y2k-magenta);
+    color: white;
+    box-shadow: 0 0 20px var(--y2k-magenta);
+}
+
+.font-pixel { font-family: 'VT323', monospace; }
 </style>

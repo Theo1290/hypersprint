@@ -30,7 +30,15 @@ const hiddenInputRef = ref(null);
 const wordArray = computed(() => challenge.value ? challenge.value.content_to_type.split(' ') : []);
 const typedWords = computed(() => userInput.value.split(' '));
 const currentWordIndex = computed(() => typedWords.value.length - 1);
-const currentCharIndex = computed(() => typedWords.value[currentWordIndex.value].length);
+const currentCharIndex = computed(() => {
+  const currentTyped = typedWords.value[currentWordIndex.value];
+  return currentTyped ? currentTyped.length : 0;
+});
+
+const progressPercent = computed(() => {
+  if (wordArray.value.length === 0) return 0;
+  return (currentWordIndex.value / wordArray.value.length) * 100;
+});
 
 // Result for each word
 const completedWordResults = computed(() => {
@@ -42,6 +50,19 @@ const completedWordResults = computed(() => {
     };
   });
 });
+
+// Helpers for the "Battlegrid" Look
+const isCurrentChar = (wIdx, cIdx) => {
+  return wIdx === currentWordIndex.value && cIdx === currentCharIndex.value;
+};
+
+const getCharClass = (wordIndex, charIndex) => {
+  const typedWord = typedWords.value[wordIndex];
+  if (!typedWord || charIndex >= typedWord.length) return '';
+  const targetWord = wordArray.value[wordIndex] || '';
+  if (charIndex >= targetWord.length) return 'text-danger-char extra-char';
+  return typedWord[charIndex] === targetWord[charIndex] ? 'text-success' : 'text-danger-char';
+};
 
 // Fetch dynamic challenge
 const fetchChallenge = async () => {
@@ -226,18 +247,6 @@ const getRenderedChars = (wIdx) => {
   }
   return chars;
 };
-
-const getCharClass = (wordIndex, charIndex) => {
-  const typedWord = typedWords.value[wordIndex];
-  if (!typedWord || charIndex >= typedWord.length) return '';
-  const targetWord = wordArray.value[wordIndex] || '';
-  if (charIndex >= targetWord.length) return 'text-danger-char extra-char';
-  return typedWord[charIndex] === targetWord[charIndex] ? 'text-success' : 'text-danger-char';
-};
-
-const isCurrentChar = (wIdx, cIdx) => {
-  return wIdx === currentWordIndex.value && cIdx === currentCharIndex.value;
-};
 </script>
 
 <template>
@@ -255,13 +264,13 @@ const isCurrentChar = (wIdx, cIdx) => {
       </div>
 
       <div class="d-flex gap-3">
-        <div class="btn-group no-round border-main-thin">
-          <button v-for="m in ['time', 'words']" :key="m" @click="setMode(m)" :class="['btn btn-std-font no-round', selectedMode === m ? 'btn-primary' : 'btn-outline-primary']">
+        <div class="btn-group no-round">
+          <button v-for="m in ['time', 'words']" :key="m" @click="setMode(m)" :class="['btn-y2k no-round', selectedMode === m ? 'active-mode' : '']">
             {{ m.toUpperCase() }}
           </button>
         </div>
-        <div class="btn-group no-round border-main-thin">
-          <button v-for="v in modes[selectedMode]" :key="v" @click="setValue(v)" :class="['btn btn-std-font no-round', selectedValue === v ? 'btn-info' : 'btn-outline-info']">
+        <div class="btn-group no-round">
+          <button v-for="v in modes[selectedMode]" :key="v" @click="setValue(v)" :class="['btn-y2k no-round', selectedValue === v ? 'active-mode-alt' : '']">
             {{ v }}
           </button>
         </div>
@@ -271,39 +280,38 @@ const isCurrentChar = (wIdx, cIdx) => {
     <div class="row g-4 flex-grow-1">
       <!-- Main Challenge Area -->
       <div :class="[isSidebarOpen ? 'col-lg-9' : 'col-lg-11', 'd-flex flex-column transition-all']">
-        
-        <!-- Unified Typing Engine -->
+
+        <!-- Word Display Area (Pure Terminal Style) -->
         <div 
           ref="typingAreaRef" 
           @click="focusInput"
-          class="typing-engine position-relative mb-4 p-4 bg-black border-main font-monospace fs-3 text-white-50 no-round custom-scrollbar overflow-auto cursor-text"
+          class="typing-display-grid p-4 bg-dark-glass border-main mb-4 cursor-text"
         >
-          <!-- Hidden Input Capture -->
-          <input
+          <!-- Stealth Input (Invisible but captures all keystrokes) -->
+          <textarea
             ref="hiddenInputRef"
             v-model="userInput"
             @input="handleInput"
             :disabled="isFinished"
-            type="text"
-            class="hidden-input"
+            class="stealth-input"
+            spellcheck="false"
             autofocus
-          />
+          ></textarea>
 
-          <!-- Text Render Layer -->
           <div class="text-layer">
             <span class="word-wrapper" v-for="(word, wIdx) in wordArray" :key="wIdx">
               <span :class="['word-span', getWordClass(wIdx)]">
-                <span v-for="(charObj, cIdx) in getRenderedChars(wIdx)" :key="cIdx" :class="['char-span', getCharClass(wIdx, cIdx), { 'is-current': isCurrentChar(wIdx, cIdx) }]">
-                  {{ charObj.char }}
+                <span v-for="(char, cIdx) in word" :key="cIdx" :class="['char-span', getCharClass(wIdx, cIdx), { 'is-current': isCurrentChar(wIdx, cIdx) }]">
+                  {{ char }}
                 </span>
               </span>
-              <span :class="['space', { 'is-current': isCurrentChar(wIdx, getRenderedChars(wIdx).length) }]">&nbsp;</span>
+              <span :class="['space', { 'is-current': isCurrentChar(wIdx, word.length) }]">&nbsp;</span>
             </span>
           </div>
         </div>
 
         <!-- Persistent Restart Button -->
-        <div class="text-center mt-2 mb-3">
+        <div class="text-center mt-2 mb-3"> 
           <button @click="fetchChallenge" class="btn btn-outline-light border-0 p-0 restart-btn" title="Restart Challenge">
             <i class="bi bi-arrow-clockwise fs-1"></i>
           </button>
@@ -378,20 +386,104 @@ const isCurrentChar = (wIdx, cIdx) => {
   font-size: 2.5rem !important;
 }
 
-.typing-engine { 
-  height: 400px; 
+.track-container { background: rgba(0,0,0,0.5); position: relative; }
+
+.progress-track {
+    height: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    position: relative;
+    overflow: visible;
+}
+
+.progress-bar-cyan {
+    height: 100%;
+    background: var(--y2k-cyan);
+    box-shadow: 0 0 15px var(--y2k-cyan);
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.car-head {
+    position: absolute;
+    right: -5px;
+    top: -10px;
+    width: 20px;
+    height: 32px;
+    background: white;
+    border: 2px solid black;
+    box-shadow: 0 0 10px white;
+}
+
+/* Unified Battlegrid Style */
+.typing-display-grid { 
+  position: relative;
+  height: 300px;
   line-height: 1.8; 
   white-space: pre-wrap; 
   word-break: break-all; 
   scroll-behavior: smooth;
+  font-family: 'VT323', monospace !important;
+  font-size: 2rem !important;
+  color: rgba(255, 255, 255, 0.4);
+  overflow: auto;
+}
+
+.stealth-input {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0;
+  z-index: 2;
+  cursor: text;
+  resize: none;
+  border: none;
   outline: none;
 }
 
-.hidden-input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+.text-layer {
+  position: relative;
+  z-index: 1;
 }
+
+.race-input-styled {
+    width: 100%;
+    height: 120px;
+    background: rgba(0,0,0,0.4);
+    border: 2px solid var(--y2k-cyan);
+    color: white;
+    font-family: 'VT323', monospace !important;
+    font-size: 2rem !important;
+    resize: none;
+    outline: none;
+    transition: 0.3s;
+}
+
+.race-input-styled:focus {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    border-color: var(--y2k-cyan);
+}
+
+.char-span { position: relative; }
+
+/* The Live Cursor in Display Area */
+.is-current::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 10%;
+  width: 2px;
+  height: 80%;
+  background-color: var(--y2k-cyan);
+  animation: blink 1s infinite;
+  box-shadow: 0 0 8px var(--y2k-cyan);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.bg-dark-glass { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); }
 
 .word-wrapper { display: inline-block; }
 .word-span { display: inline-block; padding: 0 4px; position: relative; }
@@ -436,10 +528,43 @@ const isCurrentChar = (wIdx, cIdx) => {
 
 .list-group-item:hover { background: rgba(0, 255, 255, 0.05) !important; }
 
-.btn-std-font {
-  font-family: sans-serif !important;
-  font-weight: 900;
+.btn-pixel-font {
+  font-family: 'VT323', monospace !important;
+  font-weight: bold;
   letter-spacing: 1px;
+  font-size: 1.4rem !important;
+}
+
+.btn-y2k {
+  background: transparent;
+  border: 2px solid var(--y2k-cyan);
+  color: var(--y2k-cyan);
+  font-family: 'VT323', monospace;
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+  padding: 0.4rem 1.2rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: 0.2s;
+}
+
+.btn-y2k:hover {
+  background: var(--y2k-cyan);
+  color: #000;
+  box-shadow: 0 0 10px var(--y2k-cyan);
+}
+
+.active-mode {
+  background: var(--y2k-cyan);
+  color: #000;
+  box-shadow: 0 0 10px var(--y2k-cyan);
+}
+
+.active-mode-alt {
+  border-color: var(--y2k-magenta);
+  background: var(--y2k-magenta);
+  color: #000;
+  box-shadow: 0 0 10px var(--y2k-magenta);
 }
 
 .restart-btn {

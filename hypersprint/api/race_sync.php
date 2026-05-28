@@ -68,6 +68,18 @@ try {
         ]);
 
         send_json(['success' => true]);
+    } elseif ($action === 'abort') {
+        // Trigger abort event
+        pusher_trigger('race-' . $race_uuid, 'opponent-aborted', [
+            'user_id' => $user_id,
+            'username' => $_SESSION['username']
+        ]);
+        
+        // Update DB to mark race as finished
+        $stmt = $pdo->prepare("UPDATE active_races SET status = 'finished' WHERE race_uuid = ?");
+        $stmt->execute([$race_uuid]);
+
+        send_json(['success' => true]);
     }
 
 } catch (PDOException $e) {

@@ -66,6 +66,12 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  if (status.value === 'searching' && raceData.value?.race_uuid) {
+    callApi('/api/race_lobby.php', 'POST', { 
+        action: 'leave', 
+        race_uuid: raceData.value.race_uuid 
+    });
+  }
   if (channel) channel.unbind_all()
   if (pusher) pusher.disconnect()
 })
