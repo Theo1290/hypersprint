@@ -30,7 +30,11 @@ try {
     $challenge = $stmt->fetch();
 
     if (!$challenge) {
-        send_json(['error' => 'Invalid challenge'], 400);
+        $stmt = $pdo->prepare("INSERT INTO challenges (uuid, title, type) VALUES (?, 'Dynamic Sprint', 'dynamic')");
+        $stmt->execute([$challenge_uuid]);
+        $challenge_id = $pdo->lastInsertId();
+    } else {
+        $challenge_id = $challenge['id'];
     }
 
     if (!$user_id) {
@@ -52,7 +56,7 @@ try {
 
     $stmt->execute([
         $user_id,
-        $challenge['id'],
+        $challenge_id,
         $result_data,
         $score
     ]);
