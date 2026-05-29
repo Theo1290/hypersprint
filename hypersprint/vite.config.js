@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 export default defineConfig({
-  base: '/cos30043/s104565600/hypersprint/dist/',
+  base: '/cos30043/s104565600/hypersprint',
   plugins: [
     vue(),
     vueDevTools(),
@@ -17,7 +17,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://mercury.swin.edu.au/cos30043/s104565600/hypersprint',
+        target: 'https://mercury.swin.edu.au/cos30043/s104565600/hypersprint', 
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api')
       }
