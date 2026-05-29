@@ -37,22 +37,7 @@ if ($user_id) {
     }
 }
 
-try {
-    $stmt = $pdo->query("
-        SELECT
-            title,
-            difficulty AS level,
-            category AS topic,
-            type AS gamemode
-        FROM challenges
-        ORDER BY created_at DESC
-        LIMIT 6
-    ");
-
-    $response['featured_challenges'] = $stmt->fetchAll();
-} catch (PDOException $e) {
-    $response['featured_challenges'] = [];
-}
+$response['featured_challenges'] = [];
 
 try {
     $stmt = $pdo->query("
@@ -60,7 +45,7 @@ try {
             u.username, 
             MAX(r.score) AS wpm, 
             COUNT(r.id) AS games_played,
-            COALESCE(MAX(r.score), 0) DIV 10 AS level
+            SUM(r.score) AS total_experience
         FROM users u
         LEFT JOIN results r ON r.user_id = u.id
         GROUP BY u.id
