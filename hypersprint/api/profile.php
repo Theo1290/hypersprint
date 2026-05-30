@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stats = $stmt->fetch();
 
         $stmt = $pdo->prepare("
-            SELECT result_data
+            SELECT result_data, score
             FROM results
             WHERE user_id = ?
         ");
@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $totalAcc = 0;
         $countAcc = 0;
+        $totalXP = 0;
 
         foreach ($rows as $r) {
             $data = json_decode($r['result_data'], true);
@@ -54,12 +55,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $totalAcc += $data['accuracy'];
                 $countAcc++;
             }
+            $acc = isset($data['accuracy']) ? $data['accuracy'] : 0;
+            $wpm = isset($r['score']) ? $r['score'] : 0;
+            $totalXP += round($wpm * ($acc / 100));
         }
 
         $avgAcc = $countAcc > 0 ? $totalAcc / $countAcc : null;
-
-        $highest = isset($stats['highest_wpm']) ? $stats['highest_wpm'] : 0;
-        $level = $highest / 10;
+        $level = floor(sqrt($totalXP / 100)) + 1;
 
         $stmt = $pdo->prepare("
             SELECT 
