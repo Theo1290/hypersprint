@@ -6,67 +6,86 @@ import { useAuthStore } from '@/stores/auth'
 import SpeedTextbox from '@/components/input/SpeedTextbox.vue'
 import CaptchaQuery from '@/components/input/CaptchaQuery.vue'
 
-const router = useRouter()
-const auth = useAuthStore()
+const router = useRouter();
+const auth = useAuthStore();
 
 // Interface state
-const is_authenticated = ref(false)
-const loading = ref(false)
-const error = ref('')
+const is_authenticated = ref(false);
+const loading = ref(false);
+const error = ref('');
 
 // Captcha mechanic
-const isCaptchaValid = ref(false)
-const isSubmitting = ref(false)
+const isCaptchaValid = ref(false);
+const isSubmitting = ref(false);
 
 // Keep track of the validation status
 const handleCaptchaVerify = (isValid) => {
-  isCaptchaValid.value = isValid
+  isCaptchaValid.value = isValid;
 }
 
 // Reference to the child SpeedTextbox component
-const usernameSpeedTextbox = ref(null)
-const passwordSpeedTextbox = ref(null)
-const confirmSpeedTextbox = ref(null)
+const usernameSpeedTextbox = ref(null);
+const passwordSpeedTextbox = ref(null);
+const confirmSpeedTextbox = ref(null);
 
 // Retrieve data from SpeedTextbox and process it
 const handleSubmit = async (e) => {
-  e.preventDefault()
-  if (!usernameSpeedTextbox.value || !passwordSpeedTextbox.value || !confirmSpeedTextbox.value || !isCaptchaValid.value) {
-    error.value = 'Please fill all input fields!'
-    return
-  }
-  
-  const dataUsername = usernameSpeedTextbox.value.submit()
-  const dataPassword = passwordSpeedTextbox.value.submit()
-  const dataConfirm = confirmSpeedTextbox.value.submit()
+  e.preventDefault();
+  loading.value = true;
+  error.value = '';
 
-  if (dataPassword.text !== dataConfirm.text) {
+  // Data input must include all four input values
+  if(!usernameSpeedTextbox.value || !passwordSpeedTextbox.value || !confirmSpeedTextbox.value || !isCaptchaValid.value) {
+    error.value = 'Please fill all input fields!';
+    loading.value = false;
+    return;
+  }
+
+  // Process data inside components
+  const dataUsername = usernameSpeedTextbox.value.submit();
+  const dataPassword = passwordSpeedTextbox.value.submit();
+  const dataConfirm = confirmSpeedTextbox.value.submit();
+
+  // Check for early escape errors (regex)
+  // No need to query the API for invalid entries
+  // But tell users what a valid input requires
+  if(!dataUsername.valid) {
+    error.value = dataUsername.text;
+    loading.value = false;
+    return;
+  } else if(!dataPassword.valid) {
+    error.value = dataPassword.text;
+    loading.value = false;
+    return;
+  }
+
+  // Ensure passwords match
+  if(dataPassword.text !== dataConfirm.text) {
     error.value = 'Your passwords do not match!'
-    return
+    loading.value = false;
+    return;
   }
-
-  error.value = ''
-  loading.value = true
 
   try {
-    const res = await callApi('/api/signup.php', 'POST', {
+    // Submit username and password to backend via API call
+    const result = await callApi('/api/signup.php', 'POST', {
       username: dataUsername.text,
       password: dataPassword.text,
       confirm: dataConfirm.text
-    })
+    });
 
-    if (res.success) {
-      auth.setAuth(res.user)
-      is_authenticated.value = true
+    if(result.success) {
+      // Authorize the user on success
+      auth.setAuth(result.user);
+      is_authenticated.value = true;
+      
       // Redirect to profile after a short delay
-      setTimeout(() => {
-        router.push('/profile')
-      }, 1500)
+      setTimeout(() => { router.push('/profile') }, 1500);
     }
-  } catch (err) {
-    error.value = err.message || 'Login failed! Please try again.'
+  } catch (drop) {
+    error.value = drop.message || 'Signup failed! Please try again...';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 </script>
@@ -98,6 +117,8 @@ const handleSubmit = async (e) => {
           <SpeedTextbox ref="usernameSpeedTextbox"
             id="username" name="username" type="text"
             placeholder="Enter username..."
+            regex="^[a-zA-Z][a-zA-Z0-9_]{3,16}$"
+            error="Usernames must be 3-16 characters (letters, numbers, underscores)"
             autocomplete="username" required
           />
 
@@ -106,6 +127,8 @@ const handleSubmit = async (e) => {
           <SpeedTextbox ref="passwordSpeedTextbox"
             id="password" name="password" type="password"
             placeholder="Enter password..."
+            regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+=\-[\]{}|;:',./?]{8,16}$"
+            error="Passwords must be 8-16 characters (one uppercase, one lowercase, one number)"
             autocomplete="current-password" required
           />
 
@@ -114,6 +137,8 @@ const handleSubmit = async (e) => {
           <SpeedTextbox ref="confirmSpeedTextbox"
             id="confirm" name="confirm" type="password"
             placeholder="Confirm password..."
+            regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+=\-[\]{}|;:',./?]{8,16}$"
+            error="Passwords must be 8-16 characters (one uppercase, one lowercase, one number)"
             autocomplete="current-password" required
           />
 

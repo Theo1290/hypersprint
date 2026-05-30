@@ -12,7 +12,9 @@ const props = defineProps({
   id: { type: String, default: null },
   name: { type: String, default: null },
   type: { type: String, default: 'text' },
-  placeholder: { type: String, default: 'Enter your text...' }
+  placeholder: { type: String, default: 'Enter your text...' },
+  regex: { type: String, default: null },
+  error: { type: String, default: 'Your input is not valid!' }
 });
 
 // Stores the input ID
@@ -27,6 +29,12 @@ const inputType = ref(props.type);
 // Stores the input content
 const userInput = ref('');
 
+// Stores the regular expression for validation
+// const regex = ref(props.regex);
+
+// Stores the regular expression error message
+const error = ref(props.error);
+
 // Timestamp when the current typing session began
 const sessionStart = ref(null);
 
@@ -38,6 +46,18 @@ const isActive = ref(false);
 
 // Tracks visibility of sanitized text state (for password show/hide)
 const isVisible = ref(false);
+
+// Checks if the input string passes regular expression validation
+const isValid = computed(() => {
+  if(!props.regex) return true;
+
+  try {
+    const pattern = new RegExp(props.regex);
+    return pattern.test(userInput.value);
+  } catch {
+    return false;
+  }
+});
 
 /*
  * Reset component state
@@ -52,6 +72,7 @@ const reset = () => {
   sessionStart.value = null;
   accumulatedTime.value = 0;
   isActive.value = false;
+  isVisible.value = false;
 };
 
 /*
@@ -217,12 +238,16 @@ const submit = () => {
   // Ensure active session is paused before final calculation
   pauseSession();
 
-  return {
-    text: userInput.value,
+  var data = {
+    valid: isValid.value,
+    text: (isValid.value ? userInput.value : error.value ),
     cpm: cpm.value,
     duration: Math.round(activeDurationSeconds.value),
     characters: totalCharacters.value
   };
+
+  reset(); // Cleanup before returning data
+  return(data);
 };
 
 // Component modifications
@@ -246,6 +271,8 @@ defineExpose({
       :name = "inputName"
       :type="inputType"
       :placeholder="placeholder"
+      :regex="regex"
+      :error="error"
       @input="handleInput"
       @focus="handleFocus"
       @blur="handleBlur"
