@@ -930,6 +930,11 @@ a:hover {
     100% { transform: scale(1); }
 }
 
+/* disabled ligatures for typing display to prevent character merging */
+.word, .word span, [class*="word"] {
+    font-variant-ligatures: none !important;
+    font-feature-settings: "liga" 0, "clig" 0 !important;
+}
 
 
 
