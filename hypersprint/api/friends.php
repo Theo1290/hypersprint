@@ -4,7 +4,6 @@ require __DIR__ . '/db.php';
 
 start_session();
 
-// ✅ FIXED (removed ??)
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 
 if (!$user_id) {
@@ -25,9 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     u.profile_url
                 FROM users u
                 WHERE u.username LIKE ?
+                AND u.id != ?
                 LIMIT 10
             ");
-            $stmt->execute([$search]);
+            $stmt->execute([$search, $user_id]);
             $results = $stmt->fetchAll();
 
             foreach ($results as &$r) {
@@ -59,6 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             FROM friends f
             JOIN users u ON u.id = f.friend_user_id
             WHERE f.user_id = ?
+            AND EXISTS (
+                SELECT 1 FROM friends f2 
+                WHERE f2.user_id = f.friend_user_id AND f2.friend_user_id = f.user_id
+            )
         ");
         $stmt->execute([$user_id]);
         $friends = $stmt->fetchAll();
@@ -69,8 +73,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             FROM friends f
             JOIN users u ON u.id = f.user_id
             WHERE f.friend_user_id = ?
+            AND NOT EXISTS (
+                SELECT 1 FROM friends f2 
+                WHERE f2.user_id = ? AND f2.friend_user_id = f.user_id
+            )
         ");
-        $stmt->execute([$user_id]);
+        $stmt->execute([$user_id, $user_id]);
         $incoming = $stmt->fetchAll();
 
         // SENT REQUESTS
@@ -98,14 +106,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $data = get_json_body();
 
-    // ✅ FIXED (removed ??)
     $action = isset($data['action']) ? $data['action'] : null;
 
     try {
 
         if ($action === 'send_request') {
 
-            // ✅ FIXED
             $to = isset($data['to_user_id']) ? (int)$data['to_user_id'] : 0;
 
             if (!$to) {
@@ -123,7 +129,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'accept') {
 
-            // ✅ FIXED
             $from = isset($data['from_user_id']) ? (int)$data['from_user_id'] : 0;
 
             $stmt = $pdo->prepare("
@@ -140,7 +145,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'decline') {
 
-            // ✅ FIXED
             $from = isset($data['from_user_id']) ? (int)$data['from_user_id'] : 0;
 
             $stmt = $pdo->prepare("
@@ -154,7 +158,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'remove') {
 
-            // ✅ FIXED
             $friend = isset($data['friend_id']) ? (int)$data['friend_id'] : 0;
 
             $stmt = $pdo->prepare("
