@@ -5,47 +5,67 @@ import { callApi } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
 import SpeedTextbox from '@/components/input/SpeedTextbox.vue'
 
-const router = useRouter()
-const auth = useAuthStore()
+const router = useRouter();
+const auth = useAuthStore();
 
-// UI state
-const is_authenticated = ref(false)
-const loading = ref(false)
-const error = ref('')
+// User-interface state
+const is_authenticated = ref(false);
+const loading = ref(false);
+const error = ref('');
 
 // Reference to the child SpeedTextbox component
-const usernameSpeedTextbox = ref(null)
-const passwordSpeedTextbox = ref(null)
+const usernameSpeedTextbox = ref(null);
+const passwordSpeedTextbox = ref(null);
 
 // Retrieve data from SpeedTextbox and process it
 const handleSubmit = async (e) => {
-  e.preventDefault()
-  if (!usernameSpeedTextbox.value || !passwordSpeedTextbox.value) return
+  e.preventDefault();
+  loading.value = true;
+  error.value = '';
 
-  error.value = ''
-  loading.value = true
+  // Text input must both have values
+  if(!usernameSpeedTextbox.value || !passwordSpeedTextbox.value) {
+    error.value = 'Please enter your username and password!';
+    loading.value = false;
+    return;
+  }
 
-  const dataUsername = usernameSpeedTextbox.value.submit()
-  const dataPassword = passwordSpeedTextbox.value.submit()
+  // Process data inside components
+  const dataUsername = usernameSpeedTextbox.value.submit();
+  const dataPassword = passwordSpeedTextbox.value.submit();
+
+  // Check for early escape errors (regex)
+  // No need to query the API for invalid entries
+  // And no need to give unauthorized users hints
+  if(!dataUsername.valid) {
+    error.value = dataUsername.text;
+    loading.value = false;
+    return;
+  } else if(!dataPassword.valid) {
+    error.value = dataPassword.text;
+    loading.value = false;
+    return;
+  }
 
   try {
-    const res = await callApi('/api/login.php', 'POST', {
+    // Submit username and password to backend via API call
+    const result = await callApi('/api/login.php', 'POST', {
       username: dataUsername.text,
       password: dataPassword.text
-    })
+    });
 
-    if (res.success) {
-      auth.setAuth(res.user)
-      is_authenticated.value = true
-      // Optional: Redirect to profile after a short delay
-      setTimeout(() => {
-        router.push('/profile')
-      }, 1500)
+    if(result.success) {
+      // Authorize the user on success
+      auth.setAuth(result.user);
+      is_authenticated.value = true;
+      
+      // Redirect to profile after a short delay
+      setTimeout(() => { router.push('/profile') }, 1500);
     }
-  } catch (err) {
-    error.value = err.message || 'Login failed. Please try again.'
+  } catch(drop) {
+    error.value = drop.message || 'Login failed! Please try again...';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 </script>
@@ -73,18 +93,24 @@ const handleSubmit = async (e) => {
       <form @submit="handleSubmit" style="margin-left: 1.2em;">
         <div>
           <!-- Username input (uses SpeedTextbox component) -->
+          <!-- Usernames must be 3-16 characters (letters, numbers, underscores) -->
           <label for="username" class="y2k-note">Username</label>
           <SpeedTextbox ref="usernameSpeedTextbox"
             id="username" name="username" type="text"
             placeholder="Enter username..."
+            regex="^[a-zA-Z][a-zA-Z0-9_]{3,16}$"
+            error="Your username was incorrect!"
             autocomplete="username" required
           />
 
           <!-- Password input (uses SpeedTextbox component) -->
+          <!-- Passwords must be 8-16 characters (one uppercase, one lowercase, one number) -->
           <label for="password" class="y2k-note">Password</label>
           <SpeedTextbox ref="passwordSpeedTextbox"
             id="password" name="password" type="password"
             placeholder="Enter password..."
+            regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+=\-[\]{}|;:',./?]{8,16}$"
+            error="Your password was incorrect!"
             autocomplete="current-password" required
           />
           
