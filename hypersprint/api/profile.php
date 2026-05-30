@@ -58,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $avgAcc = $countAcc > 0 ? $totalAcc / $countAcc : null;
 
-        // ✅ FIXED (removed ??)
         $highest = isset($stats['highest_wpm']) ? $stats['highest_wpm'] : 0;
         $level = $highest / 10;
 
@@ -81,7 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         foreach ($recent as &$r) {
             $data = json_decode($r['result_data'], true);
 
-            // ✅ FIXED (removed ??)
             $r['accuracy'] = isset($data['accuracy']) ? $data['accuracy'] : null;
             $r['duration'] = isset($data['time_taken']) ? $data['time_taken'] : null;
             $r['completed'] = $r['completed_at'];
@@ -95,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'profile_url' => $user['profile_url'],
                 'joined' => $user['created_at'],
                 'level' => $level,
-                // ✅ FIXED (removed ??)
                 'highest_wpm' => (float)(isset($stats['highest_wpm']) ? $stats['highest_wpm'] : 0),
                 'average_wpm' => (float)(isset($stats['average_wpm']) ? $stats['average_wpm'] : 0),
                 'average_accuracy' => $avgAcc,
