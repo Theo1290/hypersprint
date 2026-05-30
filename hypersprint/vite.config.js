@@ -16,10 +16,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': {
-        target: 'https://mercury.swin.edu.au/cos30043/s104565600/hypersprint', 
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
+      '/cos30043/s104565600/hypersprint/api': {
+        target: 'https://mercury.swin.edu.au', 
+        changeOrigin: true
       }
     }
   }
