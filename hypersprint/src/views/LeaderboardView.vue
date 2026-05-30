@@ -52,6 +52,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { callApi } from '@/utils/api'
 
 const leaderboard = ref([])
 const loading = ref(false)
@@ -62,24 +63,7 @@ const fetchLeaderboard = async () => {
   error.value = ''
 
   try {
-    const response = await fetch('/api/leaderboard.php', {
-      method: 'GET',
-      credentials: 'include',
-    })
-
-    const text = await response.text()
-    let data
-
-    try {
-      data = text ? JSON.parse(text) : {}
-    } catch {
-      throw new Error('Invalid API response')
-    }
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Unable to load leaderboard')
-    }
-
+    const data = await callApi('/api/leaderboard.php')
     leaderboard.value = data.leaderboard || []
   } catch (err) {
     error.value = err.message

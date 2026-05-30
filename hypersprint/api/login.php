@@ -32,28 +32,39 @@ try {
         ], 401);
     }
 
-    // Is the password a secure hash?
-    // Secure hashes always start with '$2y$' or '$2a$' or '$2x$'
-    $is_hashed = (strpos($user['password_hash'], '$2') === 0);
-    if (!$is_hashed) {
-        send_json([
-            'debug_error' => 'Password format error!',
-            'reason' => 'Your database contains a plain-text password or old MD5 hash. password_verify() will always fail this.',
-            'database_value_preview' => substr($user['password_hash'], 0, 5) . '...'
-        ], 401);
+    $hash = $user['password_hash'];
+    $is_bcrypt = (strpos($hash, '$2') === 0);
+    $is_md5 = (strlen($hash) === 32 && ctype_xdigit($hash)); // 32 hex characters
+
+    if ($is_bcrypt) {
+        // Native or polyfilled Bcrypt verification
+        $does_match = password_verify($password, $hash);
+    } elseif ($is_md5) {
+        // Compatibility for polyfill MD5 hashes generated on older PHP (Mercury)
+        $does_match = (md5($password) === $hash);
+    } else {
+        // Fallback for legacy plain-text passwords seeded in standard tables on Mercury
+        $does_match = ($password === $hash);
     }
 
-    // Does the password pass verification?
-    $does_match = password_verify($password, $user['password_hash']);
     if (!$does_match) {
         send_json([
             'debug_error' => 'Password mismatch!',
-            'reason' => 'The password you typed does not match the hash in the database.'
+            'reason' => 'The password you typed does not match the credentials in the system database.'
         ], 401);
     }
 
-    // Password matches database!
-    send_json(['success' => true, 'message' => 'Debug passed! Password matches.']);
+    // Password matches database! Establish user session.
+    $_SESSION['user_id'] = (int)$user['id'];
+    $_SESSION['username'] = $user['username'];
+
+    send_json([
+        'success' => true,
+        'user' => [
+            'id' => $user['id'],
+            'username' => $user['username']
+        ]
+    ]);
 
 } catch (PDOException $e) {
     send_json(['error' => $e->getMessage()], 500);

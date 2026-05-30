@@ -41,7 +41,7 @@ try {
     }
 
     $uuid = generate_uuid();
-    $hash = password_hash($password, 'default');
+    $hash = password_hash($password, PASSWORD_DEFAULT);
 
     $stmt = $pdo->prepare("
         INSERT INTO users (uuid, username, email, password_hash, created_at)
