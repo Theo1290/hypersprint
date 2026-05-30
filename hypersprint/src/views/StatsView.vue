@@ -51,7 +51,7 @@ onMounted(loadStats)
           <div class="progress no-round bg-dark mb-2" style="height: 25px; border: 1px solid var(--y2k-cyan);">
             <div class="progress-bar bg-info" :style="{ width: levelInfo.progress + '%' }"></div>
           </div>
-          <p class="small text-muted">{{ levelInfo.xp }} / {{ levelInfo.nextXp }} XP</p>
+          <p class="fw-bold mt-2" style="color: rgba(255,255,255,0.7);">{{ levelInfo.xp }} / {{ levelInfo.nextXp }} XP</p>
         </div>
       </div>
 
