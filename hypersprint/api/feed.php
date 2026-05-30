@@ -8,7 +8,7 @@ $user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 // GET - return feed posts with like counts
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $limit = 10;
+    $limit = 9;
     $offset = ($page - 1) * $limit;
 
     try {
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if($existing) {
             // unlike
             $stmt = $pdo->prepare("DELETE FROM feed_likes WHERE post_id = ? AND user_id = ?");
-            $stmt->execute([$post_is, $user_id]);
+            $stmt->execute([$post_id, $user_id]);
             send_json(['success' => true, 'action' => 'unliked']);
         } else {
             // like

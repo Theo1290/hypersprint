@@ -11,6 +11,7 @@ const error = ref(null)
 const currentPage = ref(1)
 const totalPages = ref(1) // both ^ manage pagaination
 let pollingInterval = null // holds interval ID
+let lastLikeTime = 0
 
 onMounted(() => { // runs once component first appears
   loadFeed() // populate page
@@ -23,13 +24,14 @@ onUnmounted(() => { // when user naviages away from page
 
 // calls API with current page number .
 async function loadFeed() {
+   if (Date.now() - lastLikeTime < 5000) return //
   try {
     const res = await callApi(`/api/feed.php?page=${currentPage.value}`)
     posts.value = res.posts || []
-    totalPages.value = res.pages || 1 // || 1 , are fallbacks incase the API return null
+    totalPages.value = res.pages || 1
   } catch (e) {
     error.value = 'Failed to load feed.'
-  } finally { // awlays run
+  } finally {
     loading.value = false
   }
 }
@@ -43,16 +45,13 @@ async function changePage(page) {
 
 // assume success, revert on failure
 async function toggleLike(post) {
-  if (!auth.isAuthenticated) return // if not logged in. Guard clause
-
-  // Optimistic update -> before the API call, immediate flip
+  if (!auth.isAuthenticated) return
+  lastLikeTime = Date.now()
   post.liked_by_me = !post.liked_by_me
   post.like_count += post.liked_by_me ? 1 : -1
-
   try {
     await callApi('/api/feed.php', 'POST', { post_id: post.post_id })
   } catch (e) {
-    // Revert on failure
     post.liked_by_me = !post.liked_by_me
     post.like_count += post.liked_by_me ? 1 : -1
   }
@@ -88,74 +87,76 @@ function timeAgo(dateString) {
 
     <div v-else>
       <!-- Feed Cards -->
-      <div class="feed-grid mb-4">
-        <div v-for="post in posts" :key="post.post_id" class="feed-card">
+      <div class="row g-3 mb-4">
+        <div v-for="post in posts" :key="post.post_id" class="col-12 col-md-6 col-lg-4">
+          <div class="feed-card h-100">
 
-          <!-- Card Header -->
-          <div class="feed-card-header d-flex align-items-center justify-content-between mb-3">
-            <div class="d-flex align-items-center gap-2">
-              <div class="feed-avatar y2k-center-content">
-                <img v-if="post.profile_url" :src="post.profile_url" class="feed-avatar-img" />
-                <i v-else class="bi bi-person-fill"></i>
-              </div>
-              <div>
-                <div class="feed-username">{{ post.username }}</div>
-                <div class="feed-time">{{ timeAgo(post.created_at) }}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- New Record Card -->
-          <div v-if="post.post_data?.type === 'new_record'" class="feed-card-body">
-            <div class="feed-badge mb-2"><i class="bi bi-trophy-fill me-1"></i>NEW PERSONAL BEST</div>
-            <div class="feed-challenge-name mb-3">{{ post.post_data.challenge_title.replace('dynamic-time-', '').replace('dynamic-words-', '') + (post.post_data.challenge_title.includes('time') ? 's Sprint' : ' Words') }}</div>
-            <div class="d-flex align-items-center gap-4 mb-3">
-              <div class="text-center">
-                <div class="feed-wpm glow-text-cyan">{{ post.post_data.new_wpm }}</div>
-                <div class="feed-wpm-label">WPM</div>
-              </div>
-              <div class="text-center">
-                <div class="feed-improvement glow-text-lime">+{{ post.post_data.improvement }}</div>
-                <div class="feed-wpm-label">IMPROVEMENT</div>
-              </div>
-              <div class="text-center">
-                <div class="feed-prev glow-text-magenta">{{ post.post_data.previous_wpm }}</div>
-                <div class="feed-wpm-label">PREVIOUS</div>
-              </div>
-              <div class="text-center">
-                <div class="feed-accuracy" style="color: var(--y2k-text)">{{ post.post_data.accuracy }}%</div>
-                <div class="feed-wpm-label">ACCURACY</div>
+            <!-- Card Header -->
+            <div class="feed-card-header d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center gap-2">
+                <div class="feed-avatar y2k-center-content">
+                  <img v-if="post.profile_url" :src="post.profile_url" class="feed-avatar-img" />
+                  <i v-else class="bi bi-person-fill"></i>
+                </div>
+                <div>
+                  <div class="feed-username">{{ post.username }}</div>
+                  <div class="feed-time">{{ timeAgo(post.created_at) }}</div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Achievement Card -->
-          <div v-else-if="post.post_data?.type === 'achievement'" class="feed-card-body">
-            <div class="feed-badge feed-badge-achievement mb-2"><i class="bi bi-lightning-fill me-1"></i>ACHIEVEMENT UNLOCKED</div>
-            <div class="feed-challenge-name mb-1">{{ post.post_data.achievement_title }}</div>
-            <div class="feed-achievement-desc">{{ post.post_data.achievement_description }}</div>
-          </div>
+            <!-- New Record Card -->
+            <div v-if="post.post_data?.type === 'new_record'" class="feed-card-body">
+              <div class="feed-badge mb-2"><i class="bi bi-trophy-fill me-1"></i>NEW PERSONAL BEST</div>
+              <div class="feed-challenge-name mb-3">{{ post.post_data.challenge_title }}</div>
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="text-center">
+                  <div class="feed-wpm glow-text-cyan">{{ post.post_data.new_wpm }}</div>
+                  <div class="feed-wpm-label">WPM</div>
+                </div>
+                <div class="text-center">
+                  <div class="feed-improvement glow-text-lime">+{{ post.post_data.improvement }}</div>
+                  <div class="feed-wpm-label">IMPROVEMENT</div>
+                </div>
+                <div class="text-center">
+                  <div class="feed-prev glow-text-magenta">{{ post.post_data.previous_wpm }}</div>
+                  <div class="feed-wpm-label">PREVIOUS</div>
+                </div>
+                <div class="text-center">
+                  <div class="feed-accuracy" style="color: var(--y2k-text)">{{ post.post_data.accuracy }}%</div>
+                  <div class="feed-wpm-label">ACCURACY</div>
+                </div>
+              </div>
+            </div>
 
-          <!-- Fallback for unknown post types -->
-          <div v-else class="feed-card-body">
-            <p style="color: var(--y2k-text)">{{ post.post_text }}</p>
-          </div>
+            <!-- Achievement Card -->
+            <div v-else-if="post.post_data?.type === 'achievement'" class="feed-card-body">
+              <div class="feed-badge feed-badge-achievement mb-2"><i class="bi bi-lightning-fill me-1"></i>ACHIEVEMENT UNLOCKED</div>
+              <div class="feed-challenge-name mb-1">{{ post.post_data.achievement_title }}</div>
+              <div class="feed-achievement-desc">{{ post.post_data.achievement_description }}</div>
+            </div>
 
-          <!-- Like Button -->
-          <div class="feed-card-footer d-flex align-items-center gap-2 mt-3">
-            <button
-              v-if="auth.isAuthenticated"
-              class="btn-like"
-              :class="{ liked: post.liked_by_me }"
-              @click="toggleLike(post)"
-            >
-              <i :class="post.liked_by_me ? 'bi bi-heart-fill' : 'bi bi-heart'"></i> {{ post.like_count }}
-            </button>
-            <span v-else class="like-guest">
-              <RouterLink to="/login">LOGIN TO LIKE</RouterLink>
-            </span>
-          </div>
+            <!-- Fallback for unknown post types -->
+            <div v-else class="feed-card-body">
+              <p style="color: var(--y2k-text)">{{ post.post_text }}</p>
+            </div>
 
+            <!-- Like Button -->
+            <div class="feed-card-footer d-flex align-items-center gap-2 mt-3">
+              <button
+                v-if="auth.isAuthenticated"
+                class="btn-like"
+                :class="{ liked: post.liked_by_me }"
+                @click="toggleLike(post)"
+              >
+                <i :class="post.liked_by_me ? 'bi bi-heart-fill' : 'bi bi-heart'"></i> {{ post.like_count }}
+              </button>
+              <span v-else class="like-guest">
+                <RouterLink to="/login">LOGIN TO LIKE</RouterLink>
+              </span>
+            </div>
+
+          </div>
         </div>
       </div>
 
@@ -213,10 +214,12 @@ function timeAgo(dateString) {
 .feed-challenge-name { font-family: 'VT323', monospace; font-size: 1.4rem; color: var(--y2k-text); letter-spacing: 1px; }
 .feed-achievement-desc { color: var(--y2k-text); font-size: 0.9rem; opacity: 0.8; }
 
-.feed-wpm { font-family: 'VT323', monospace; font-size: 2.8rem; line-height: 1; }
-.feed-improvement { font-family: 'VT323', monospace; font-size: 2.8rem; line-height: 1; }
-.feed-prev { font-family: 'VT323', monospace; font-size: 2rem; line-height: 1; }
-.feed-accuracy { font-family: 'VT323', monospace; font-size: 2rem; line-height: 1; }
+.feed-wpm, .feed-improvement, .feed-prev, .feed-accuracy {
+  font-family: 'VT323', monospace;
+  font-size: 2rem;
+  line-height: 1;
+}
+
 .feed-wpm-label { font-size: 0.75rem; color: var(--y2k-text); letter-spacing: 1px; opacity: 0.7; margin-top: 0.2rem; }
 
 .btn-like {
@@ -238,12 +241,6 @@ function timeAgo(dateString) {
 .btn-page { padding: 0.3rem 0.9rem; }
 .btn-page.active { background: var(--y2k-cyan); color: #000; box-shadow: 0 0 10px var(--y2k-cyan); }
 
-.feed-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-
 .feed-card {
   background: var(--y2k-glass);
   border: 2px solid rgba(255, 255, 255, 0.6);
@@ -254,10 +251,5 @@ function timeAgo(dateString) {
 .feed-card:hover {
   border-color: white;
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
-}
-@media (max-width: 768px) {
-  .feed-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>
