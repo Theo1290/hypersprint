@@ -121,7 +121,7 @@ const handleSubmit = async (e) => {
         {{ error }}
       </div>
 
-      <form @submit="handleSubmit" style="margin-left: 1.2em;">
+      <form @submit="handleSubmit" style="margin-left: 1.2em;" aria-label="Signup form">
         <div>
           <!-- Username input (uses SpeedTextbox component) -->
           <label for="username" class="y2k-note">Username</label>
@@ -130,6 +130,7 @@ const handleSubmit = async (e) => {
             placeholder="Enter username..."
             regex="^[a-zA-Z][a-zA-Z0-9_]{3,16}$"
             error="Usernames must be 3-16 characters (letters, numbers, underscores)"
+            aria-label="Username input"
             autocomplete="username" required
           />
 
@@ -140,6 +141,7 @@ const handleSubmit = async (e) => {
             placeholder="Enter password..."
             regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+=\-[\]{}|;:',./?]{8,16}$"
             error="Passwords must be 8-16 characters (one uppercase, one lowercase, one number)"
+            aria-label="Password input"
             autocomplete="current-password" required
           />
 
@@ -150,6 +152,7 @@ const handleSubmit = async (e) => {
             placeholder="Confirm password..."
             regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+=\-[\]{}|;:',./?]{8,16}$"
             error="Passwords must be 8-16 characters (one uppercase, one lowercase, one number)"
+            aria-label="Confirm password input"
             autocomplete="current-password" required
           />
 
@@ -157,14 +160,16 @@ const handleSubmit = async (e) => {
           <label for="captcha" class="y2k-note">Captcha</label>
           <CaptchaQuery ref="captchaQuery"
             id="captcha" name="captcha"
+            aria-label="CAPTCHA verification panel"
             :disabled="isSubmitting"
-            @verify="handleCaptchaVerify"
+            @verify="handleCaptchaVerify"            
           />
 
           <!-- Submission button -->
           <button 
-            type="submit" 
-            class="y2k-btn w-80 mt-3" 
+            type="submit"
+            class="y2k-btn w-80 mt-3"
+            aria-label="Submit signup"
             :disabled="loading"
           >
             {{ loading ? 'AUTHENTICATING...' : 'REGISTER' }}

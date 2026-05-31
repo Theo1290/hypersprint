@@ -289,6 +289,7 @@ defineExpose({
       type="button"
       @click="toggleVisibility"
       class="btn btn-visible"
+      aria-label="Toggle show password"
       tabindex="-1"
     >
       {{ isVisible ? 'Hide' : 'Show' }}
@@ -296,7 +297,7 @@ defineExpose({
 
     <!-- Live CPM label -->
     <!-- Implements styling from main.css (glow-text-lime) -->
-    <div class="label glow-text-lime">
+    <div class="label glow-text-lime" aria-label="Characters-per-minute speed">
       {{ cpm }} cpm
     </div>
   </div>
