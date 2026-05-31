@@ -65,6 +65,7 @@ defineExpose({
       <input
         type="number"
         class="answer-input form-control bg-grey border-secondary no-round font-monospace text-white"
+        aria-label="CAPTCHA answer input"
         v-model.number="userInput"
         :id="inputId"
         :name = "inputName"
@@ -75,7 +76,10 @@ defineExpose({
       
       <!-- Captcha display -->
       <!-- Implements styling from main.css (glow-font-magenta) -->
-      <div class="question-textbox bg-grey border-secondary no-round text-center font-monospace fw-bold glow-text-magenta">
+      <div
+        class="question-textbox bg-grey border-secondary no-round text-center font-monospace fw-bold glow-text-magenta"
+        aria-label="CAPTCHA question textbox"
+      >
         {{ captchaQuestion }}
       </div>
 
@@ -84,6 +88,7 @@ defineExpose({
         <button
           type="button"
           class="btn btn-outline-secondary btn-sm"
+          aria-label="Regenerate CAPTCHA question"
           :disabled="disabled"
           @click="generateCaptcha"
           title="Refresh Captcha"

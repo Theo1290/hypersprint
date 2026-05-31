@@ -5,10 +5,11 @@ import { callApi } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
 import SpeedTextbox from '@/components/input/SpeedTextbox.vue'
 
+// Router and authentication references
 const router = useRouter();
 const auth = useAuthStore();
 
-// User-interface state
+// Interface state
 const is_authenticated = ref(false);
 const loading = ref(false);
 const error = ref('');
@@ -90,7 +91,7 @@ const handleSubmit = async (e) => {
         {{ error }}
       </div>
 
-      <form @submit="handleSubmit" style="margin-left: 1.2em;">
+      <form @submit="handleSubmit" style="margin-left: 1.2em;" aria-label="Login form">
         <div>
           <!-- Username input (uses SpeedTextbox component) -->
           <!-- Usernames must be 3-16 characters (letters, numbers, underscores) -->
@@ -100,6 +101,7 @@ const handleSubmit = async (e) => {
             placeholder="Enter username..."
             regex="^[a-zA-Z][a-zA-Z0-9_]{3,16}$"
             error="Your username was incorrect!"
+            aria-label="Username input"
             autocomplete="username" required
           />
 
@@ -111,13 +113,15 @@ const handleSubmit = async (e) => {
             placeholder="Enter password..."
             regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+=\-[\]{}|;:',./?]{8,16}$"
             error="Your password was incorrect!"
+            aria-label="Password input"
             autocomplete="current-password" required
           />
           
           <!-- Submission button -->
           <button 
-            type="submit" 
-            class="y2k-btn w-80 mt-3" 
+            type="submit"
+            class="y2k-btn w-80 mt-3"
+            aria-label="Submit login"
             :disabled="loading"
           >
             {{ loading ? 'AUTHENTICATING...' : 'LOGIN' }}
