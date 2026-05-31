@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import SpeedTextbox from '@/components/input/SpeedTextbox.vue'
 import CaptchaQuery from '@/components/input/CaptchaQuery.vue'
 
+// Router and authentication references
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -15,6 +16,7 @@ const loading = ref(false);
 const error = ref('');
 
 // Captcha mechanic
+const captchaQuery = ref(null);
 const isCaptchaValid = ref(false);
 const isSubmitting = ref(false);
 
@@ -34,8 +36,14 @@ const handleSubmit = async (e) => {
   loading.value = true;
   error.value = '';
 
-  // Data input must include all four input values
-  if(!usernameSpeedTextbox.value || !passwordSpeedTextbox.value || !confirmSpeedTextbox.value || !isCaptchaValid.value) {
+  // Data input must include four valid input values
+  if(!captchaQuery.value || !isCaptchaValid.value) {
+    // Captcha check
+    error.value = 'Your captcha answer was incorrect!';
+    loading.value = false;
+    return;
+  } else if(!usernameSpeedTextbox.value || !passwordSpeedTextbox.value || !confirmSpeedTextbox.value) {
+    // Non-empty username and password check
     error.value = 'Please fill all input fields!';
     loading.value = false;
     return;
@@ -46,21 +54,24 @@ const handleSubmit = async (e) => {
   const dataPassword = passwordSpeedTextbox.value.submit();
   const dataConfirm = confirmSpeedTextbox.value.submit();
 
+  // Reset the captcha query
+  captchaQuery.value.reset();
+
   // Check for early escape errors (regex)
   // No need to query the API for invalid entries
   // But tell users what a valid input requires
   if(!dataUsername.valid) {
+    // Username check
     error.value = dataUsername.text;
     loading.value = false;
     return;
   } else if(!dataPassword.valid) {
+    // Password check
     error.value = dataPassword.text;
     loading.value = false;
     return;
-  }
-
-  // Ensure passwords match
-  if(dataPassword.text !== dataConfirm.text) {
+  } else if(dataPassword.text !== dataConfirm.text) {
+    // Ensure passwords match
     error.value = 'Your passwords do not match!'
     loading.value = false;
     return;

@@ -1,15 +1,15 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 
-// Define Props (To handle form loading/submitting states)
+// Define properties (to handle form loading/submit states)
 const props = defineProps({
   id: { type: String, default: null },
   name: { type: String, default: null },
   disabled: { type: Boolean, default: false }
 })
 
-// Define Emits (To update the parent form status)
-const emit = defineEmits(['verify'])
+// Define emits (to update the parent form status)
+const emit = defineEmits(['verify']);
 
 // Stores the input ID
 const inputId = computed(() => { return props.id; });
@@ -17,33 +17,46 @@ const inputId = computed(() => { return props.id; });
 // Stores the input name
 const inputName = computed(() => { return props.name; });
 
-const captchaQuestion = ref('')
-const expectedAnswer = ref(0)
-const userInput = ref(null)
+// Stores generated data and user input
+const captchaQuestion = ref('');
+const expectedAnswer = ref(0);
+const userInput = ref(null);
+
+// Public helper for resetting captcha
+const reset = () => {
+  generateCaptcha();
+}
 
 // Generate a random math addition
 const generateCaptcha = () => {
-  const num1 = Math.floor(Math.random() * 10) + 1
-  const num2 = Math.floor(Math.random() * 10) + 1
-  captchaQuestion.value = `${num1} + ${num2} = ?`
-  expectedAnswer.value = num1 + num2
-  userInput.value = null
-  emit('verify', false) // Reset parent state on refresh
+  const num1 = Math.floor(Math.random() * 10) + 1;
+  const num2 = Math.floor(Math.random() * 10) + 1;
+  captchaQuestion.value = `${num1} + ${num2} = ?`;
+  expectedAnswer.value = num1 + num2;
+  userInput.value = null;
+
+  // Reset parent state on refresh
+  emit('verify', false);
 }
 
-// Check answer on every keystroke
+// Check input for answer on keypress
 const checkAnswer = () => {
-  if (userInput.value === expectedAnswer.value) {
-    emit('verify', true)  // Captcha passed
+  if(userInput.value === expectedAnswer.value) {
+    emit('verify', true);
   } else {
-    emit('verify', false) // Captcha failed or incomplete
+    emit('verify', false);
   }
 }
 
 // Initialize on load
 onMounted(() => {
-  generateCaptcha()
-})
+  generateCaptcha();
+});
+
+// Component public access
+defineExpose({
+  reset
+});
 </script>
 
 <template>
@@ -51,7 +64,7 @@ onMounted(() => {
       <!-- User input -->
       <input
         type="number"
-        class="answer-input form-control bg-grey border-secondary no-round font-monospace"
+        class="answer-input form-control bg-grey border-secondary no-round font-monospace text-white"
         v-model.number="userInput"
         :id="inputId"
         :name = "inputName"
@@ -61,11 +74,12 @@ onMounted(() => {
       >
       
       <!-- Captcha display -->
-      <div class="question-textbox bg-grey border-secondary no-round text-center font-monospace fw-bold">
+      <!-- Implements styling from main.css (glow-font-magenta) -->
+      <div class="question-textbox bg-grey border-secondary no-round text-center font-monospace fw-bold glow-text-magenta">
         {{ captchaQuestion }}
       </div>
 
-      <!-- Refresh button -->
+      <!-- Refresh button (clockwise circle icon character code) -->
       <div class="col-auto">
         <button
           type="button"
@@ -80,6 +94,7 @@ onMounted(() => {
     </div>
 </template>
 
+<!-- Base styling included for fallback stability (reusable site-wide) -->
 <style scoped>
 :root {
   --color-black: #0c1017;
