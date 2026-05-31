@@ -29,9 +29,6 @@ const inputType = ref(props.type);
 // Stores the input content
 const userInput = ref('');
 
-// Stores the regular expression for validation
-// const regex = ref(props.regex);
-
 // Stores the regular expression error message
 const error = ref(props.error);
 
@@ -238,6 +235,7 @@ const submit = () => {
   // Ensure active session is paused before final calculation
   pauseSession();
 
+  // Package all the data
   var data = {
     valid: isValid.value,
     text: (isValid.value ? userInput.value : error.value ),
@@ -246,14 +244,15 @@ const submit = () => {
     characters: totalCharacters.value
   };
 
-  reset(); // Cleanup before returning data
+  // Cleanup and return data
+  reset();
   return(data);
 };
 
 // Component modifications
 defineOptions({
   inheritAttrs: false
-})
+});
 
 // Component public access
 defineExpose({
@@ -263,6 +262,7 @@ defineExpose({
 </script>
 
 <template>
+  <!-- User input -->
   <div class="speed-textbox">
     <input
       v-model="userInput"
@@ -283,23 +283,26 @@ defineExpose({
       rows="1"
     />
 
-    <!-- Toggle Button (Only shows if the prop type is 'password') -->
+    <!-- Toggle Button (only shows if type is 'password') -->
     <button 
       v-if="type === 'password' && totalCharacters > 0"
       type="button"
       @click="toggleVisibility"
       class="btn btn-visible"
+      tabindex="-1"
     >
       {{ isVisible ? 'Hide' : 'Show' }}
     </button>
 
     <!-- Live CPM label -->
-    <div class="label">
+    <!-- Implements styling from main.css (glow-text-lime) -->
+    <div class="label glow-text-lime">
       {{ cpm }} cpm
     </div>
   </div>
 </template>
 
+<!-- Base styling included for fallback stability (reusable site-wide) -->
 <style scoped>
 :root {
   --color-black: #0c1017;
