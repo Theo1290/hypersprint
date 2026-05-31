@@ -124,34 +124,37 @@ const handleSubmit = async (e) => {
       <form @submit="handleSubmit" style="margin-left: 1.2em;" aria-label="Signup form">
         <div>
           <!-- Username input (uses SpeedTextbox component) -->
+          <!-- Usernames start with a letter and are 3-16 characters (numbers and underscores allowed) -->
           <label for="username" class="y2k-note">Username</label>
           <SpeedTextbox ref="usernameSpeedTextbox"
             id="username" name="username" type="text"
             placeholder="Enter username..."
-            regex="^[a-zA-Z][a-zA-Z0-9_]{3,16}$"
-            error="Usernames must be 3-16 characters (letters, numbers, underscores)"
+            regex="^[a-zA-Z][a-zA-Z0-9_]{2,15}$"
+            error="Usernames start with a letter and are 3-16 characters (numbers and underscores allowed)"
             aria-label="Username input"
             autocomplete="username" required
           />
 
           <!-- Password input (uses SpeedTextbox component) -->
+          <!-- Passwords must be 8-16 characters long (one uppercase, one lowercase, one number) -->
           <label for="password" class="y2k-note">Password</label>
           <SpeedTextbox ref="passwordSpeedTextbox"
             id="password" name="password" type="password"
             placeholder="Enter password..."
             regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+=\-[\]{}|;:',./?]{8,16}$"
-            error="Passwords must be 8-16 characters (one uppercase, one lowercase, one number)"
+            error="Passwords must be 8-16 characters long (one uppercase, one lowercase, one number)"
             aria-label="Password input"
             autocomplete="current-password" required
           />
 
           <!-- Password input (uses SpeedTextbox component) -->
+          <!-- Passwords must be 8-16 characters long (one uppercase, one lowercase, one number) -->
           <label for="confirm" class="y2k-note">Confirm Password</label>
           <SpeedTextbox ref="confirmSpeedTextbox"
             id="confirm" name="confirm" type="password"
             placeholder="Confirm password..."
             regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()_+=\-[\]{}|;:',./?]{8,16}$"
-            error="Passwords must be 8-16 characters (one uppercase, one lowercase, one number)"
+            error="Passwords must be 8-16 characters long (one uppercase, one lowercase, one number)"
             aria-label="Confirm password input"
             autocomplete="current-password" required
           />
