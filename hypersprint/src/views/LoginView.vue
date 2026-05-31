@@ -94,19 +94,19 @@ const handleSubmit = async (e) => {
       <form @submit="handleSubmit" style="margin-left: 1.2em;" aria-label="Login form">
         <div>
           <!-- Username input (uses SpeedTextbox component) -->
-          <!-- Usernames must be 3-16 characters (letters, numbers, underscores) -->
+          <!-- Usernames start with a letter and are 3-16 characters (numbers and underscores allowed) -->
           <label for="username" class="y2k-note">Username</label>
           <SpeedTextbox ref="usernameSpeedTextbox"
             id="username" name="username" type="text"
             placeholder="Enter username..."
-            regex="^[a-zA-Z][a-zA-Z0-9_]{3,16}$"
+            regex="^[a-zA-Z][a-zA-Z0-9_]{2,15}$"
             error="Your username was incorrect!"
             aria-label="Username input"
             autocomplete="username" required
           />
 
           <!-- Password input (uses SpeedTextbox component) -->
-          <!-- Passwords must be 8-16 characters (one uppercase, one lowercase, one number) -->
+          <!-- Passwords must be 8-16 characters long (one uppercase, one lowercase, one number) -->
           <label for="password" class="y2k-note">Password</label>
           <SpeedTextbox ref="passwordSpeedTextbox"
             id="password" name="password" type="password"
